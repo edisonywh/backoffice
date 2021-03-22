@@ -1,0 +1,60 @@
+<%= if @search_enabled do %>
+  <%= live_component @socket, Backoffice.SearchComponent, search: @search %>
+<% end %>
+
+<%= if @live_action in [:edit] do %>
+  <%= live_modal @socket, Backoffice.FormComponent,
+    id: @resource.id,
+    title: @page_title,
+    action: @live_action,
+    resource: @resource,
+    resolver: @resolver,
+    form_fields: @form_fields,
+    return_to: @return_to
+  %>
+<% end %>
+
+<div class="mt-4 flex flex-col">
+  <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+      <%= page_nav @socket, %{page: @resources}, &Routes.user_index_path/3 %>
+      <table class="min-w-full table-fixed">
+        <thead>
+          <tr>
+            <%= for field <- @fields do %>
+              <th
+                class="w-1/12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+              >
+                <%= column_name(field) %>
+              </th>
+            <% end %>
+            <%= if @actions != [] do %>
+              <th
+                class="w-1/12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            <% end %>
+          </tr>
+
+          <tbody class="bg-white">
+            <%= for resource <- @resources.entries do %>
+              <tr class="border-b border-gray-200">
+                <%= for field <- @fields do %>
+                  <td class="px-6 py-4 whitespace">
+                    <div class="text-sm leading-5 text-gray-900"><%= column_value(resource, field) %></div>
+                  </td>
+                <% end %>
+                <%= for action <- @actions do %>
+                  <td class="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
+                    <%= live_patch action_name(action), to: action_link(action, resource), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>

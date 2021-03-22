@@ -1,0 +1,28 @@
+<h2 class="text-lg leading-6 font-medium text-gray-900"><%= @title %></h2>
+
+<%= f = form_for @changeset, "#",
+  id: "form",
+  phx_target: @myself,
+  phx_change: "validate",
+  phx_submit: "save",
+  as: "resource" %>
+
+  <%= for {field, opts} <- @form_fields do %>
+    <div class="mt-6 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+      <%= label f, field, class: "block text-sm font-medium leading-5 text-gray-700" %>
+      <%= Backoffice.ResourceView.form_field f, field, opts %>
+      <%= error_tag f, field %>
+    </div>
+  <% end %>
+
+  <div class="mt-8 border-t border-gray-200 pt-5">
+    <div class="flex justify-end">
+      <span class="inline-flex rounded-md shadow-sm">
+        <%= live_patch "Cancel", to: @return_to, class: "py-2 px-4 border border-gray-300 rounded-md text-sm leading-5 font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition duration-150 ease-in-out" %>
+      </span>
+      <span class="ml-3 inline-flex rounded-md shadow-sm">
+        <%= submit "Save", class: "inline-flex justify-center py-2 px-4 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out", phx_disable_with: "Saving..." %>
+      </span>
+    </div>
+  </div>
+</form>
