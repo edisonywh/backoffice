@@ -50,6 +50,13 @@ defmodule Backoffice.ResourceView do
     layout.links()
   end
 
+  def logo do
+    layout = Application.get_env(:backoffice, :layout)
+
+    layout.logo() ||
+      "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+  end
+
   def active_link(path, path) do
     {:safe,
      "bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"}
