@@ -1,12 +1,14 @@
-<%= if @search_enabled do %>
-  <%= live_component @socket, Backoffice.SearchComponent, search: @search %>
-<% end %>
+<div class="flex justify-between">
+  <%= if @search_enabled do %>
+    <%= live_component @socket, Backoffice.SearchComponent, search: @search %>
+  <% end %>
 
-<%= for action <- @page_actions do %>
-  <div class="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
-    <%= live_patch action_name(action), to: action_link(action), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-  </div>
-<% end %>
+  <%= for action <- @page_actions do %>
+    <div class="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
+      <%= live_patch action_name(action), to: action_link(action), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    </div>
+  <% end %>
+</div>
 
 <%= if @live_action in [:new, :edit] do %>
   <%= live_modal @socket, Backoffice.FormComponent,

@@ -74,7 +74,7 @@ defmodule Backoffice.ResourceView do
     checkbox(form, field, opts)
   end
 
-  defp do_form_field(form, field, type, opts) do
+  defp do_form_field(form, field, _type, opts) do
     opts =
       Keyword.merge(
         [
