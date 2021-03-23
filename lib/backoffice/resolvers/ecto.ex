@@ -5,8 +5,8 @@ defmodule Backoffice.Resolvers.Ecto do
 
   # TODO: Review/Tidy up the API, what should they be named and in what position?
 
-  def change(resolver_opts, %struct{} = resource, attrs \\ %{}) do
-    changeset = Keyword.get(resolver_opts, :changeset)[:edit]
+  def change(resolver_opts, action, %struct{} = resource, attrs \\ %{}) do
+    changeset = Keyword.get(resolver_opts, :changeset)[action]
 
     case changeset do
       nil ->
@@ -18,20 +18,26 @@ defmodule Backoffice.Resolvers.Ecto do
     end
   end
 
-  def save(resolver_opts, changeset) do
+  def save(resolver_opts, :edit, changeset) do
     repo = Keyword.fetch!(resolver_opts, :repo)
-    # TODO: Check action to determine if it's :insert or :update
     repo.update(changeset)
+  end
+
+  def save(resolver_opts, :new, changeset) do
+    repo = Keyword.fetch!(resolver_opts, :repo)
+    repo.insert(changeset)
   end
 
   def load(resource, resolver_opts, page_opts) do
     repo = Keyword.fetch!(resolver_opts, :repo)
+    preloads = Keyword.get(resolver_opts, :preload, [])
     page = Map.get(page_opts, "page")
 
-    # TODO: Optimize and select only shown resources (this means adding the original module here so we can access fields)
+    # TODO: Optimize and select only shown resources (this means adding the original module here so we can access __MODULE__.fields())
 
     resource
     |> ordering()
+    |> preload([q], ^preloads)
     |> repo.paginate(%{page: page})
   end
 

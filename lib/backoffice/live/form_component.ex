@@ -5,8 +5,8 @@ defmodule Backoffice.FormComponent do
   import Backoffice.ErrorHelper
 
   @impl true
-  def update(%{resource: resource, resolver: {resolver, opts}} = assigns, socket) do
-    changeset = resolver.change(opts, resource)
+  def update(%{resource: resource, resolver: {resolver, opts}, action: action} = assigns, socket) do
+    changeset = resolver.change(opts, action, resource)
 
     {:ok,
      socket
@@ -21,7 +21,7 @@ defmodule Backoffice.FormComponent do
     {resolver, opts} = socket.assigns.resolver
 
     changeset =
-      resolver.change(opts, resource, resource_params)
+      resolver.change(opts, socket.assigns.action, resource, resource_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -31,18 +31,20 @@ defmodule Backoffice.FormComponent do
     save_resource(socket, socket.assigns.action, resource_params)
   end
 
-  defp save_resource(socket, :edit, resource_params) do
+  defp save_resource(socket, action, resource_params) when action in [:new, :edit] do
     resource = socket.assigns.resource
     {resolver, opts} = socket.assigns.resolver
 
-    changeset = resolver.change(opts, resource, resource_params)
+    changeset = resolver.change(opts, action, resource, resource_params)
 
-    case resolver.save(opts, changeset) do
+    action_msg = if action == :new, do: "Created", else: "Updated"
+
+    case resolver.save(opts, action, changeset) do
       {:ok, resource} ->
         {:noreply,
          socket
          # TODO: Fix flash message
-         |> put_flash(:success, "Updated resource [##{resource.id}]!")
+         |> put_flash(:success, "#{action_msg} resource [##{resource.id}]!")
          |> push_redirect(to: socket.assigns.return_to)}
 
       {:error, %Ecto.Changeset{} = changeset} ->

@@ -21,7 +21,8 @@ defmodule Backoffice.Resources do
           |> assign(:fields, __MODULE__.index())
           |> assign(:form_fields, __MODULE__.form_fields())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
-          |> assign(:actions, __MODULE__.row_actions(socket))
+          |> assign(:row_actions, __MODULE__.row_actions(socket))
+          |> assign(:page_actions, __MODULE__.page_actions(socket))
           |> assign(:route_func, fn socket, params, action ->
             Backoffice.Resources.get_path(__MODULE__, socket, params, action)
           end)
@@ -40,10 +41,6 @@ defmodule Backoffice.Resources do
         {:ok, socket}
       end
 
-      def index do
-        Backoffice.Resources.resolve_schema(unquote(resource)).__schema__(:fields)
-      end
-
       def render(assigns) do
         Phoenix.View.render(
           Backoffice.ResourceView,
@@ -54,6 +51,19 @@ defmodule Backoffice.Resources do
 
       def handle_params(params, _url, socket) do
         {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+      end
+
+      # TODO: Search and Pagination override each other now
+      def handle_event("search", page_opts, socket) do
+        {:noreply,
+         push_patch(socket,
+           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
+         )}
+      end
+
+      defp apply_action(socket, :new, page_opts) do
+        socket
+        |> assign(:resource, %unquote(resource){})
       end
 
       defp apply_action(socket, :edit, page_opts) do
@@ -87,34 +97,62 @@ defmodule Backoffice.Resources do
         )
       end
 
+      def index do
+        for k <- Backoffice.Resources.resolve_schema(unquote(resource)).__schema__(:fields) do
+          {k, nil}
+        end
+      end
+
       def search_fields, do: nil
 
+      # There's __schema__(:fields) and __changeset__ which are better choices.
+      # TODO: remove call to is_tuple/1 and handle embeds/assocs
       def form_fields do
-        %unquote(resource){}
-        |> Map.delete(:__struct__)
-        |> Map.delete(:__meta__)
-        |> Map.keys()
+        for {k, v} <- unquote(resource).__changeset__(), not is_tuple(v) do
+          {k, %{type: v}}
+        end
+      end
+
+      def create, do: false
+      def edit, do: false
+
+      def page_actions(socket) do
+        if __MODULE__.create() do
+          [
+            create: %{
+              # BUG: If user doesn't define :new in router, this will fail.
+              #   How can I dynamically toggle this?
+              link: Backoffice.Resources.get_path(__MODULE__, socket, :new, [])
+            }
+          ]
+        else
+          []
+        end
       end
 
       def row_actions(socket) do
-        [
-          edit: %{
-            link: fn resource ->
-              Backoffice.Resources.get_path(__MODULE__, socket, :edit, resource)
-            end
-          }
-        ]
+        if __MODULE__.edit() do
+          [
+            edit: %{
+              link: fn resource ->
+                Backoffice.Resources.get_path(__MODULE__, socket, :edit, resource)
+              end
+            }
+          ]
+        else
+          []
+        end
       end
 
-      # TODO: Search and Pagination override each other now
-      def handle_event("search", page_opts, socket) do
-        {:noreply,
-         push_patch(socket,
-           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
-         )}
-      end
-
-      defoverridable(index: 0, search_fields: 0, form_fields: 0, row_actions: 1)
+      defoverridable(
+        index: 0,
+        search_fields: 0,
+        form_fields: 0,
+        create: 0,
+        edit: 0,
+        row_actions: 1,
+        page_actions: 1
+      )
     end
   end
 

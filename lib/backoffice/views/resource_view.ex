@@ -7,10 +7,6 @@ defmodule Backoffice.ResourceView do
 
   import Phoenix.LiveView.Helpers
 
-  alias SlickWeb.Router.Helpers, as: Routes
-
-  # TODO: Separate the HTML helpers to a HTML module
-
   def form_field(form, field, opts) do
     type = Map.fetch!(opts, :type)
     opts = Map.get(opts, :opts, %{})
@@ -18,31 +14,77 @@ defmodule Backoffice.ResourceView do
     do_form_field(form, field, type, Enum.into(opts, []))
   end
 
-  defp do_form_field(form, field, type, opts)
-       when type in [
-              :id,
-              :string
-            ] do
+  defp maybe_disabled(opts) do
+    case Keyword.get(opts, :disabled) do
+      true -> "bg-gray-200"
+      _ -> ""
+    end
+  end
+
+  defp do_form_field(form, field, :integer, opts) do
     opts =
       Keyword.merge(
         [
           class:
-            "form-input block w-full transition duration-150 ease-in-out sm:text-sm sm:leading-5"
+            "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
         ],
         opts
       )
 
-    text_input(form, field, opts)
+    number_input(form, field, opts)
+  end
+
+  defp do_form_field(form, field, :textarea, opts) do
+    opts =
+      Keyword.merge(
+        [
+          class:
+            "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+        ],
+        opts
+      )
+
+    textarea(form, field, opts)
+  end
+
+  defp do_form_field(form, field, :map, opts) do
+    opts =
+      Keyword.merge(
+        [
+          class:
+            "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition",
+          value: Jason.encode!(input_value(form, field))
+        ],
+        opts
+      )
+
+    textarea(form, field, opts)
   end
 
   defp do_form_field(form, field, :boolean, opts) do
     opts =
       Keyword.merge(
-        [class: "form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"],
+        [
+          class:
+            "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded transition"
+        ],
         opts
       )
 
     checkbox(form, field, opts)
+  end
+
+  defp do_form_field(form, field, type, opts) do
+    opts =
+      Keyword.merge(
+        [
+          class:
+            "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+        ],
+        opts
+      )
+
+    text_input(form, field, opts)
   end
 
   def links do
@@ -99,6 +141,10 @@ defmodule Backoffice.ResourceView do
       nil -> Phoenix.Naming.humanize(action)
       name -> name
     end
+  end
+
+  def action_link({_action, opts}) do
+    opts[:link]
   end
 
   def action_link({_action, opts}, resource) do
