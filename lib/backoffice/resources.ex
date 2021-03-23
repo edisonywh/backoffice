@@ -22,6 +22,9 @@ defmodule Backoffice.Resources do
           |> assign(:form_fields, __MODULE__.form_fields())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
           |> assign(:actions, __MODULE__.row_actions(socket))
+          |> assign(:route_func, fn socket, params, action ->
+            Backoffice.Resources.get_path(__MODULE__, socket, params, action)
+          end)
           |> assign(
             :return_to,
             Backoffice.Resources.get_path(__MODULE__, socket, :index)
@@ -72,6 +75,7 @@ defmodule Backoffice.Resources do
           :return_to,
           Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
         )
+        |> assign(:search, page_opts["search"])
         |> assign(
           :resources,
           unquote(resolver).search(
