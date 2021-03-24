@@ -47,6 +47,21 @@ defmodule Backoffice.ResourceView do
     textarea(form, field, opts)
   end
 
+  defp do_form_field(form, field, {:parameterized, Ecto.Enum, %{values: values}}, opts) do
+    options = values |> Enum.map(&Phoenix.Naming.humanize/1) |> Enum.zip(values)
+
+    opts =
+      Keyword.merge(
+        [
+          class:
+            "#{maybe_disabled(opts)} mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        ],
+        opts
+      )
+
+    select(form, field, options, opts)
+  end
+
   defp do_form_field(form, field, {:embed, %{related: schema}}, opts) do
     opts =
       Keyword.merge(
