@@ -76,13 +76,37 @@ defmodule Backoffice.ResourceView do
     end)
   end
 
-  defp do_form_field(_form, _field, {:assoc, %{related: _schema}}, _opts) do
-    [
-      {:safe,
-       "<div class=\"px-8 py-2 bg-yellow-100 text-yellow-600 border border-yellow-200 rounded-lg text-center\">"},
-      {:safe, "Associations are not yet supported"},
-      {:safe, "</div>"}
-    ]
+  defp do_form_field(form, field, {:assoc, %{related: schema}}, opts) do
+    opts =
+      Keyword.merge(
+        [
+          disabled: true,
+          class:
+            "bg-gray-200 mt-2 mb-4 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+        ],
+        opts
+      )
+
+    inputs_for(form, field, fn fp ->
+      fields = schema.__schema__(:fields)
+      types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+      fields =
+        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
+          {k, %{type: v}}
+        end
+
+      [
+        {:safe, "<div class=\"p-2\">"},
+        Enum.map(fields, fn {field, %{type: type}} ->
+          [
+            label(fp, field, class: "block text-sm font-medium leading-5 text-gray-700"),
+            do_form_field(fp, field, type, opts)
+          ]
+        end),
+        {:safe, "</div>"}
+      ]
+    end)
   end
 
   defp do_form_field(form, field, :map, opts) do
