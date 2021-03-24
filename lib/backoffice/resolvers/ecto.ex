@@ -43,9 +43,13 @@ defmodule Backoffice.Resolvers.Ecto do
 
   def get(resource, resolver_opts, page_opts) do
     repo = Keyword.fetch!(resolver_opts, :repo)
+    preloads = Keyword.get(resolver_opts, :preload, [])
+
     id = Map.get(page_opts, "id")
 
-    repo.get(resource, id)
+    resource
+    |> preload([q], ^preloads)
+    |> repo.get(id)
   end
 
   # TODO: Let user click on fields to do ordering?

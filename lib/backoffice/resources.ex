@@ -98,7 +98,12 @@ defmodule Backoffice.Resources do
       end
 
       def index do
-        for k <- Backoffice.Resources.resolve_schema(unquote(resource)).__schema__(:fields) do
+        schema = Backoffice.Resources.resolve_schema(unquote(resource))
+
+        fields = schema.__schema__(:fields)
+        types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
           {k, nil}
         end
       end
@@ -108,7 +113,9 @@ defmodule Backoffice.Resources do
       # There's __schema__(:fields) and __changeset__ which are better choices.
       # TODO: remove call to is_tuple/1 and handle embeds/assocs
       def form_fields do
-        for {k, v} <- unquote(resource).__changeset__(), not is_tuple(v) do
+        schema = Backoffice.Resources.resolve_schema(unquote(resource))
+
+        for {k, v} <- schema.__changeset__() do
           {k, %{type: v}}
         end
       end
