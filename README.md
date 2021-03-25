@@ -235,15 +235,16 @@ Honestly I'd really love for the community to contribute more, as I've mentioned
 
 Other than that, here are some things I hope to improve:
 
-[] Better support for associations?
-[] Custom color?
-[] Custom pages
-[] Datepicker support
-[] LiveComponent support (WIP. Required for complex form fields)
-[] Implement a test suite..
-[] Localization support?
-[] Authorisation?
-[] Widget support (probably in the form of LiveComponents)
+- [ ] Better support for associations?
+- [ ] Custom color?
+- [ ] Custom pages
+- [ ] Datepicker support
+- [ ] LiveComponent support (WIP. Required for complex form fields)
+- [ ] Implement a test suite..
+- [ ] Localization support?
+- [ ] Authorisation?
+- [ ] Widget support (probably in the form of LiveComponents)
+- [ ] Better documentations
 
 ## Installation
 
