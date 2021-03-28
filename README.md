@@ -123,7 +123,6 @@ defmodule SlickWeb.Backoffice.UserLive.Index do
 
   def create, do: true
   def edit, do: true
-  def search_fields, do: [:name, :username, :email]
 
   def index do
     [

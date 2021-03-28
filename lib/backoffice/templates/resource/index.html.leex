@@ -1,7 +1,7 @@
 <div class="flex justify-between">
-  <%= if @search_enabled do %>
-    <%= live_component @socket, Backoffice.SearchComponent, search: @search %>
-  <% end %>
+  <div>
+    <%= live_component @socket, Backoffice.FilterComponent, id: :filter, params: @params %>
+  </div>
 
   <%= for action <- @page_actions do %>
     <div></div>

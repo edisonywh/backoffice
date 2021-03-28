@@ -1,7 +1,6 @@
 defmodule Backoffice.Resources do
   @callback index() :: term()
   @callback row_actions(term()) :: term()
-  @callback search_fields() :: list() | nil
 
   defmacro __using__(opts) do
     {resolver, resolver_opts} = Keyword.fetch!(opts, :resolver)
@@ -16,8 +15,6 @@ defmodule Backoffice.Resources do
       def mount(params, session, socket) do
         socket =
           socket
-          |> assign(:search, "")
-          |> assign(:search_enabled, __MODULE__.search_fields())
           |> assign(:fields, __MODULE__.index())
           |> assign(:form_fields, __MODULE__.form_fields())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
@@ -50,14 +47,33 @@ defmodule Backoffice.Resources do
       end
 
       def handle_params(params, _url, socket) do
-        {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+        socket =
+          socket
+          |> apply_action(socket.assigns.live_action, params)
+          |> assign(:params, params)
+
+        {:noreply, socket}
       end
 
-      # TODO: Search and Pagination override each other now
-      def handle_event("search", page_opts, socket) do
+      def handle_info({:apply_filter, filter, value}, socket) do
+        params =
+          socket.assigns.params
+          |> Map.put(filter, value)
+
         {:noreply,
          push_patch(socket,
-           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
+           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
+         )}
+      end
+
+      def handle_info({:remove_filter, filter}, socket) do
+        params =
+          socket.assigns.params
+          |> Map.delete(filter)
+
+        {:noreply,
+         push_patch(socket,
+           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
          )}
       end
 
@@ -85,7 +101,6 @@ defmodule Backoffice.Resources do
           :return_to,
           Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
         )
-        |> assign(:search, page_opts["search"])
         |> assign(
           :resources,
           unquote(resolver).search(
@@ -107,8 +122,6 @@ defmodule Backoffice.Resources do
           {k, nil}
         end
       end
-
-      def search_fields, do: nil
 
       # There's __schema__(:fields) and __changeset__ which are better choices.
       # TODO: remove call to is_tuple/1 and handle embeds/assocs
@@ -153,7 +166,6 @@ defmodule Backoffice.Resources do
 
       defoverridable(
         index: 0,
-        search_fields: 0,
         form_fields: 0,
         create: 0,
         edit: 0,
