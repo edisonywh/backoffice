@@ -93,7 +93,8 @@ defmodule Backoffice.FilterComponent do
 
   defp op(:not), do: "not equal to"
   defp op(:contains), do: "contains"
-  defp op(:order_by), do: "is ordered by"
+  defp op(:desc), do: "descending"
+  defp op(:asc), do: "ascending"
   defp op(:lt), do: "is less than"
   defp op(:lte), do: "is less than or equal to"
   defp op(:gt), do: "is greater than"

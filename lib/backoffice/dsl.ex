@@ -12,13 +12,42 @@ defmodule Backoffice.DSL do
 
     postlude =
       quote unquote: false do
-        fields = @index_fields |> Enum.reverse()
+        index_fields = @index_fields |> Enum.reverse()
 
-        def __index__(), do: unquote(fields)
+        def __index__(), do: unquote(index_fields)
       end
 
     quote do
       Module.delete_attribute(__MODULE__, :index_fields)
+      unquote(prelude)
+      unquote(postlude)
+    end
+  end
+
+  defmacro form(action \\ nil, do: block) do
+    form(__CALLER__, action, block)
+  end
+
+  def form(_caller, action, block) do
+    prelude =
+      quote do
+        import Backoffice.DSL
+        unquote(block)
+      end
+
+    postlude =
+      quote bind_quoted: [action: action] do
+        form_fields = @form_fields |> Enum.reverse()
+
+        if action do
+          def __form__(unquote(action)), do: unquote(form_fields)
+        else
+          def __form__(), do: unquote(form_fields)
+        end
+      end
+
+    quote do
+      Module.delete_attribute(__MODULE__, :form_fields)
       unquote(prelude)
       unquote(postlude)
     end
@@ -38,5 +67,6 @@ defmodule Backoffice.DSL do
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
+    Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
   end
 end
