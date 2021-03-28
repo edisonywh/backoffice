@@ -1,4 +1,8 @@
 defmodule Backoffice.Resolvers.Ecto do
+  @moduledoc """
+  Resolver for Ecto (currently only works with Postgres)
+  """
+
   @behaviour Backoffice.Resolver
 
   import Ecto.Query
@@ -33,12 +37,19 @@ defmodule Backoffice.Resolvers.Ecto do
     preloads = Keyword.get(resolver_opts, :preload, [])
     page = Map.get(page_opts, "page")
 
-    # TODO: Optimize and select only shown resources (this means adding the original module here so we can access __MODULE__.fields())
-
     resource
-    |> ordering()
     |> preload([q], ^preloads)
     |> repo.paginate(%{page: page})
+  end
+
+  def search(_mod, resource, resolver_opts, page_opts) do
+    page_opts
+    |> Enum.map(&Backoffice.Filter.preprocess/1)
+    |> List.flatten()
+    |> Enum.reduce(resource, fn {_, field, _} = filter, acc ->
+      Backoffice.Filter.apply_filter(acc, filter, resource.__schema__(:type, field))
+    end)
+    |> load(resolver_opts, page_opts)
   end
 
   def get(resource, resolver_opts, page_opts) do
@@ -50,32 +61,5 @@ defmodule Backoffice.Resolvers.Ecto do
     resource
     |> preload([q], ^preloads)
     |> repo.get(id)
-  end
-
-  # TODO: Let user click on fields to do ordering?
-  def ordering(resource) do
-    [field | _] = Backoffice.Resources.resolve_schema(resource).__schema__(:primary_key)
-
-    resource
-    |> order_by([q], {:desc, field(q, ^field)})
-  end
-
-  def do_filter(query, "", _), do: query
-  def do_filter(query, nil, _), do: query
-  def do_filter(query, _search, []), do: query
-
-  def do_filter(query, search, [field | rest]) do
-    query
-    |> or_where([q], ilike(field(q, ^field), ^"%#{search}%"))
-    |> do_filter(search, rest)
-  end
-
-  def search(mod, resource, resolver_opts, page_opts) do
-    fields = mod.search_fields()
-    search = Map.get(page_opts, "search")
-
-    resource
-    |> do_filter(search, fields)
-    |> load(resolver_opts, page_opts)
   end
 end
