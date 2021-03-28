@@ -1,5 +1,5 @@
 defmodule Backoffice.Resources do
-  @callback index() :: term()
+  @callback __index__() :: term()
   @callback row_actions(term()) :: term()
 
   defmacro __using__(opts) do
@@ -10,12 +10,27 @@ defmodule Backoffice.Resources do
     quote do
       use Phoenix.LiveView, unquote(live_opts)
 
+      import Backoffice.DSL, only: [index: 1]
+
       @behaviour Backoffice.Resources
+
+      Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
+
+      index do
+        schema = Backoffice.Resources.resolve_schema(unquote(resource))
+
+        fields = schema.__schema__(:fields)
+        types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+        for {field, type} <- Enum.zip(fields, types), not is_tuple(type) do
+          field(field, type)
+        end
+      end
 
       def mount(params, session, socket) do
         socket =
           socket
-          |> assign(:fields, __MODULE__.index())
+          |> assign(:fields, __MODULE__.__index__())
           |> assign(:form_fields, __MODULE__.form_fields())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
           |> assign(:row_actions, __MODULE__.row_actions(socket))
@@ -112,17 +127,6 @@ defmodule Backoffice.Resources do
         )
       end
 
-      def index do
-        schema = Backoffice.Resources.resolve_schema(unquote(resource))
-
-        fields = schema.__schema__(:fields)
-        types = Enum.map(fields, &schema.__schema__(:type, &1))
-
-        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
-          {k, nil}
-        end
-      end
-
       # There's __schema__(:fields) and __changeset__ which are better choices.
       # TODO: remove call to is_tuple/1 and handle embeds/assocs
       def form_fields do
@@ -165,7 +169,7 @@ defmodule Backoffice.Resources do
       end
 
       defoverridable(
-        index: 0,
+        __index__: 0,
         form_fields: 0,
         create: 0,
         edit: 0,

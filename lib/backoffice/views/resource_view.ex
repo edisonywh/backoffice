@@ -202,27 +202,14 @@ defmodule Backoffice.ResourceView do
      """}
   end
 
-  def column_name(field) when is_atom(field), do: column_name({field, nil})
-  def column_name({field, nil}), do: Phoenix.Naming.humanize(field)
+  def column_name({_field, %{label: label}}), do: label
+  def column_name({field, _}), do: Phoenix.Naming.humanize(field)
 
-  def column_name({field, opts}) when is_map(opts) do
-    case opts[:name] do
-      nil -> column_name(field)
-      name -> name
-    end
+  def column_value(resource, {_field, %{value: value}}) when is_function(value) do
+    {:safe, value.(resource) || ""}
   end
 
-  def column_value(resource, {field, opts}) when is_map(opts) do
-    column_value(resource, {field, opts[:value]})
-  end
-
-  def column_value(resource, {field, nil}), do: Map.get(resource, field)
-
-  def column_value(resource, {_field, func}) when is_function(func) do
-    data = func.(resource) || ""
-
-    {:safe, data}
-  end
+  def column_value(resource, {field, _}), do: Map.get(resource, field)
 
   def action_name(field) when is_atom(field), do: action_name({field, nil})
   def action_name({field, nil}), do: Phoenix.Naming.humanize(field)
