@@ -9,7 +9,7 @@ defmodule Backoffice.ResourceView do
 
   def form_field(form, field, opts) do
     type = Map.fetch!(opts, :type)
-    opts = Map.get(opts, :opts, %{})
+    opts = Map.delete(opts, :type)
 
     do_form_field(form, field, type, Enum.into(opts, []))
   end
@@ -161,7 +161,7 @@ defmodule Backoffice.ResourceView do
 
   # Q: Are there any pitfall to allowing user render fields like this?
   defp do_form_field(form, field, :custom, opts) do
-    slot = Keyword.fetch!(opts, :slot)
+    slot = Keyword.fetch!(opts, :render)
 
     slot.(form, field)
   end
@@ -181,14 +181,20 @@ defmodule Backoffice.ResourceView do
 
   def links do
     layout = Application.get_env(:backoffice, :layout)
-    layout.links()
+
+    case layout do
+      nil -> []
+      _ -> layout.links()
+    end
   end
 
   def logo do
     layout = Application.get_env(:backoffice, :layout)
 
-    layout.logo() ||
-      "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+    case layout do
+      nil -> "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+      _ -> layout.logo()
+    end
   end
 
   def active_link(path, path) do

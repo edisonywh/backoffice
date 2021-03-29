@@ -124,31 +124,24 @@ defmodule SlickWeb.Backoffice.UserLive.Index do
   def create, do: true
   def edit, do: true
 
-  def index do
-    [
-      id: nil,
-      verified: %{
-        name: "Verified"
-        value: fn user ->
-          # You can customize the render yourself.
-          "Verified is #{user.verified}"
-        end
-      }
-    ]
+  index do
+    field :id
+    field :verified, :boolean
+    field :age, :string, render: &__MODULE__.field/1 # 1-arity only, takes the resource itself
   end
 
-  def form_fields do
-    [
-      verified: %{type: :boolean},
-      usernamer: %{
-        type: :custom,
-        opts: [
-          slot: fn form, field ->
-            Phoenix.HTML.Form.text_input(form, field)
-          end
-        ]
-      }
-    ]
+  form do # default for both
+    field :verified, :boolean
+    field :username, :string
+    field :age, :custom, label: "Age", render: &__MODULE__.field/2 # 2-arity, `form` and `field`.
+  end
+
+  form :edit do # form for :edit action
+    ...
+  end
+
+  form :new do # form for :new action
+    ...
   end
 end
 ```
@@ -221,12 +214,19 @@ end
 
 ## Can I use Backoffice in production?
 
-You sure can, I am using it in production with [Slick Inbox](https://slickinbox.com), but do keep in mind the following:
+You sure can, but I would not really advise it. Although it's in active development now, Backoffice is still very early stage (Backoffice isn't even on Hex yet), so it's subject to a lot of API changes.
 
-- Backoffice was part of a refactoring effort out of Slick Inbox, and my use cases for Slick's admin tool is pretty barebone, so you might find a lot of features missing. Do evaluate it thoroughly before adopting for your own usage.
-- Backoffice is still very early stage, expect breaking changes.
+For what it's worth, I am dogfodding it in production with [Slick Inbox](https://slickinbox.com).
 
-And of course, contributions are very welcomed!
+There are quite a number of issues right now:
+
+- [ ] Editing :map doesn't work
+- [ ] Index & Form fields default might not be the best (form fields right now attempts to show assocs, but you need to explicitly preload it and you can't edit them yet.)
+- [ ] Association support is not great
+- [ ] Tailwind CSS is not being purged now, so the CSS file is about 3MB.
+- [ ] etc...
+
+But, I encourage you to try it out anyway and contribute, and together we can make Backoffice great :)
 
 ## What's next for Backoffice?
 

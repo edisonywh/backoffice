@@ -73,9 +73,9 @@ defmodule Backoffice.DSL do
   end
 
   defp validate_value!(env, list) when is_list(list) do
-    if Keyword.get(list, :value) != nil do
+    if Keyword.get(list, :render) != nil do
       raise CompileError,
-        description: "If you provide :value, you must also provide :type.",
+        description: "If you provide :render, you must also provide :type.",
         file: env.file,
         line: env.line
     end
