@@ -1,5 +1,5 @@
 defmodule Backoffice.Resources do
-  @callback index() :: term()
+  @callback __index__() :: term()
   @callback row_actions(term()) :: term()
 
   defmacro __using__(opts) do
@@ -10,13 +10,37 @@ defmodule Backoffice.Resources do
     quote do
       use Phoenix.LiveView, unquote(live_opts)
 
+      import Backoffice.DSL, only: [index: 1, form: 1, form: 2]
+
       @behaviour Backoffice.Resources
+
+      Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :form_fields, accumulate: true)
+
+      index do
+        schema = Backoffice.Resources.resolve_schema(unquote(resource))
+
+        fields = schema.__schema__(:fields)
+        types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+        for {field, type} <- Enum.zip(fields, types), not is_tuple(type) do
+          field(field, type)
+        end
+      end
+
+      form do
+        schema = Backoffice.Resources.resolve_schema(unquote(resource))
+
+        for {field, type} <- schema.__changeset__() do
+          field(field, type)
+        end
+      end
 
       def mount(params, session, socket) do
         socket =
           socket
-          |> assign(:fields, __MODULE__.index())
-          |> assign(:form_fields, __MODULE__.form_fields())
+          |> assign(:fields, __MODULE__.__index__())
+          |> assign(:form_fields, __MODULE__.__form__())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
           |> assign(:row_actions, __MODULE__.row_actions(socket))
           |> assign(:page_actions, __MODULE__.page_actions(socket))
@@ -79,12 +103,14 @@ defmodule Backoffice.Resources do
 
       defp apply_action(socket, :new, page_opts) do
         socket
+        |> assign(:form_fields, Backoffice.Resources.get_form_fields(__MODULE__, :new))
         |> assign(:resource, %unquote(resource){})
       end
 
       defp apply_action(socket, :edit, page_opts) do
         socket
         |> assign(:page_title, "Edit")
+        |> assign(:form_fields, Backoffice.Resources.get_form_fields(__MODULE__, :edit))
         |> assign(
           :resource,
           unquote(resolver).get(unquote(resource), unquote(resolver_opts), page_opts)
@@ -110,27 +136,6 @@ defmodule Backoffice.Resources do
             page_opts
           )
         )
-      end
-
-      def index do
-        schema = Backoffice.Resources.resolve_schema(unquote(resource))
-
-        fields = schema.__schema__(:fields)
-        types = Enum.map(fields, &schema.__schema__(:type, &1))
-
-        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
-          {k, nil}
-        end
-      end
-
-      # There's __schema__(:fields) and __changeset__ which are better choices.
-      # TODO: remove call to is_tuple/1 and handle embeds/assocs
-      def form_fields do
-        schema = Backoffice.Resources.resolve_schema(unquote(resource))
-
-        for {k, v} <- schema.__changeset__() do
-          {k, %{type: v}}
-        end
       end
 
       def create, do: false
@@ -165,8 +170,8 @@ defmodule Backoffice.Resources do
       end
 
       defoverridable(
-        index: 0,
-        form_fields: 0,
+        __index__: 0,
+        __form__: 0,
         create: 0,
         edit: 0,
         row_actions: 1,
@@ -219,5 +224,13 @@ defmodule Backoffice.Resources do
     |> List.insert_at(3, "path")
     |> Enum.join("_")
     |> String.to_existing_atom()
+  end
+
+  def get_form_fields(mod, action) do
+    try do
+      mod.__form__(action)
+    rescue
+      _ -> mod.__form__()
+    end
   end
 end

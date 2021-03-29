@@ -9,7 +9,7 @@ defmodule Backoffice.ResourceView do
 
   def form_field(form, field, opts) do
     type = Map.fetch!(opts, :type)
-    opts = Map.get(opts, :opts, %{})
+    opts = Map.delete(opts, :type)
 
     do_form_field(form, field, type, Enum.into(opts, []))
   end
@@ -124,13 +124,14 @@ defmodule Backoffice.ResourceView do
     end)
   end
 
+  # BUG: updating map field doesn't work now
   defp do_form_field(form, field, :map, opts) do
     opts =
       Keyword.merge(
         [
           class:
             "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition",
-          value: Jason.encode!(input_value(form, field))
+          value: inspect(input_value(form, field))
         ],
         opts
       )
@@ -160,7 +161,7 @@ defmodule Backoffice.ResourceView do
 
   # Q: Are there any pitfall to allowing user render fields like this?
   defp do_form_field(form, field, :custom, opts) do
-    slot = Keyword.fetch!(opts, :slot)
+    slot = Keyword.fetch!(opts, :render)
 
     slot.(form, field)
   end
@@ -180,14 +181,20 @@ defmodule Backoffice.ResourceView do
 
   def links do
     layout = Application.get_env(:backoffice, :layout)
-    layout.links()
+
+    case layout do
+      nil -> []
+      _ -> layout.links()
+    end
   end
 
   def logo do
     layout = Application.get_env(:backoffice, :layout)
 
-    layout.logo() ||
-      "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+    case layout do
+      nil -> "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+      _ -> layout.logo()
+    end
   end
 
   def active_link(path, path) do
@@ -202,26 +209,28 @@ defmodule Backoffice.ResourceView do
      """}
   end
 
-  def column_name(field) when is_atom(field), do: column_name({field, nil})
-  def column_name({field, nil}), do: Phoenix.Naming.humanize(field)
+  def column_name({_field, %{label: label}}), do: label
+  def column_name({field, _}), do: Phoenix.Naming.humanize(field)
 
-  def column_name({field, opts}) when is_map(opts) do
-    case opts[:name] do
-      nil -> column_name(field)
-      name -> name
-    end
+  def column_value(resource, {_field, %{value: value}}) when is_function(value) do
+    {:safe, value.(resource) || ""}
   end
 
-  def column_value(resource, {field, opts}) when is_map(opts) do
-    column_value(resource, {field, opts[:value]})
+  def column_value(resource, {field, %{type: :boolean}}) do
+    {:safe,
+     """
+     <div class="flex items-center h-5">
+        <input disabled #{Map.get(resource, field) && "checked"} type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+      </div>
+     """}
   end
 
-  def column_value(resource, {field, nil}), do: Map.get(resource, field)
+  def column_value(resource, {field, %{type: :map}}) do
+    Map.get(resource, field) |> Jason.encode!(pretty: true)
+  end
 
-  def column_value(resource, {_field, func}) when is_function(func) do
-    data = func.(resource) || ""
-
-    {:safe, data}
+  def column_value(resource, {field, _}) do
+    Map.get(resource, field)
   end
 
   def action_name(field) when is_atom(field), do: action_name({field, nil})

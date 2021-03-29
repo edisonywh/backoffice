@@ -23,6 +23,7 @@ defmodule Backoffice.Resolvers.Ecto do
   end
 
   def save(resolver_opts, :edit, changeset) do
+    # TODO: Check if user has toggled `edit` to be true
     repo = Keyword.fetch!(resolver_opts, :repo)
     repo.update(changeset)
   end
