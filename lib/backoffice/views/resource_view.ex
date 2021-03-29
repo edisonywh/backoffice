@@ -124,13 +124,14 @@ defmodule Backoffice.ResourceView do
     end)
   end
 
+  # BUG: updating map field doesn't work now
   defp do_form_field(form, field, :map, opts) do
     opts =
       Keyword.merge(
         [
           class:
             "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition",
-          value: Jason.encode!(input_value(form, field))
+          value: inspect(input_value(form, field))
         ],
         opts
       )
@@ -209,7 +210,22 @@ defmodule Backoffice.ResourceView do
     {:safe, value.(resource) || ""}
   end
 
-  def column_value(resource, {field, _}), do: Map.get(resource, field)
+  def column_value(resource, {field, %{type: :boolean}}) do
+    {:safe,
+     """
+     <div class="flex items-center h-5">
+        <input disabled #{Map.get(resource, field) && "checked"} type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+      </div>
+     """}
+  end
+
+  def column_value(resource, {field, %{type: :map}}) do
+    Map.get(resource, field) |> Jason.encode!(pretty: true)
+  end
+
+  def column_value(resource, {field, _}) do
+    Map.get(resource, field)
+  end
 
   def action_name(field) when is_atom(field), do: action_name({field, nil})
   def action_name({field, nil}), do: Phoenix.Naming.humanize(field)

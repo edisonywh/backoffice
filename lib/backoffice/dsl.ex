@@ -53,20 +53,33 @@ defmodule Backoffice.DSL do
     end
   end
 
-  defmacro field(name, type \\ :string, opts \\ []) do
-    # TODO: Validate type
+  defmacro field(name, type \\ nil, opts \\ []) do
     quote do
-      Backoffice.DSL.__field__(__MODULE__, unquote(name), unquote(type), unquote(opts))
+      Backoffice.DSL.__field__(__ENV__, __MODULE__, unquote(name), unquote(type), unquote(opts))
     end
   end
 
-  def __field__(mod, name, type, opts) do
+  def __field__(env, mod, name, type, opts) do
+    # TODO: Validate types
+    validate_value!(env, type)
+
     opts =
       opts
-      |> Keyword.merge(type: type)
+      |> Keyword.merge(type: type || :string)
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
     Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
   end
+
+  defp validate_value!(env, list) when is_list(list) do
+    if Keyword.get(list, :value) != nil do
+      raise CompileError,
+        description: "If you provide :value, you must also provide :type.",
+        file: env.file,
+        line: env.line
+    end
+  end
+
+  defp validate_value!(_, _), do: :ok
 end
