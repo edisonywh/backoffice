@@ -36,6 +36,54 @@ defmodule Backoffice.Resources do
         end
       end
 
+      def create, do: false
+      def edit, do: false
+
+      def page_actions(socket) do
+        if __MODULE__.create() do
+          [
+            create: %{
+              # BUG: If user doesn't define :new in router, this will fail.
+              #   How can I dynamically toggle this?
+              link: Backoffice.Resources.get_path(__MODULE__, socket, :new, [])
+            }
+          ]
+        else
+          []
+        end
+      end
+
+      def row_actions(socket) do
+        if __MODULE__.edit() do
+          [
+            edit: %{
+              link: fn resource ->
+                Backoffice.Resources.get_path(__MODULE__, socket, :edit, resource)
+              end
+            }
+          ]
+        else
+          []
+        end
+      end
+
+      def widgets(socket) do
+        [
+          %Backoffice.PlainWidget{
+            title:
+              "Total #{
+                Phoenix.Naming.humanize(
+                  unquote(resource)
+                  |> Module.split()
+                  |> List.last()
+                  |> Phoenix.Naming.humanize()
+                )
+              }",
+            data: socket.assigns.resources.total_entries
+          }
+        ]
+      end
+
       def mount(params, session, socket) do
         socket =
           socket
@@ -62,23 +110,6 @@ defmodule Backoffice.Resources do
         {:ok, socket}
       end
 
-      def widgets(socket) do
-        [
-          %Backoffice.PlainWidget{
-            title:
-              "Total #{
-                Phoenix.Naming.humanize(
-                  unquote(resource)
-                  |> Module.split()
-                  |> List.last()
-                  |> Phoenix.Naming.humanize()
-                )
-              }",
-            data: socket.assigns.resources.total_entries
-          }
-        ]
-      end
-
       def render(assigns) do
         Phoenix.View.render(
           Backoffice.ResourceView,
@@ -94,6 +125,19 @@ defmodule Backoffice.Resources do
           |> assign(:params, params)
 
         {:noreply, socket}
+      end
+
+      def handle_event("sort", %{"field" => field}, socket) do
+        order = apply_order(socket.assigns.params["order_by"], field)
+
+        params =
+          socket.assigns.params
+          |> Map.put("order_by", order)
+
+        {:noreply,
+         push_patch(socket,
+           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
+         )}
       end
 
       def handle_info({:apply_filter, filter, value}, socket) do
@@ -162,36 +206,8 @@ defmodule Backoffice.Resources do
         |> assign(:widgets, __MODULE__.widgets(socket))
       end
 
-      def create, do: false
-      def edit, do: false
-
-      def page_actions(socket) do
-        if __MODULE__.create() do
-          [
-            create: %{
-              # BUG: If user doesn't define :new in router, this will fail.
-              #   How can I dynamically toggle this?
-              link: Backoffice.Resources.get_path(__MODULE__, socket, :new, [])
-            }
-          ]
-        else
-          []
-        end
-      end
-
-      def row_actions(socket) do
-        if __MODULE__.edit() do
-          [
-            edit: %{
-              link: fn resource ->
-                Backoffice.Resources.get_path(__MODULE__, socket, :edit, resource)
-              end
-            }
-          ]
-        else
-          []
-        end
-      end
+      defp apply_order(<<"[desc]", field::binary>>, field), do: "[asc]#{field}"
+      defp apply_order(rest, field), do: "[desc]#{field}"
 
       defoverridable(
         __index__: 0,
