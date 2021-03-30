@@ -179,36 +179,6 @@ defmodule Backoffice.ResourceView do
     text_input(form, field, opts)
   end
 
-  def links do
-    layout = Application.get_env(:backoffice, :layout)
-
-    case layout do
-      nil -> []
-      _ -> layout.links()
-    end
-  end
-
-  def logo do
-    layout = Application.get_env(:backoffice, :layout)
-
-    case layout do
-      nil -> "https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
-      _ -> layout.logo()
-    end
-  end
-
-  def active_link(path, path) do
-    {:safe,
-     "bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"}
-  end
-
-  def active_link(_, _) do
-    {:safe,
-     """
-     text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md
-     """}
-  end
-
   def column_name({_field, %{label: label}}), do: label
   def column_name({field, _}), do: Phoenix.Naming.humanize(field)
 

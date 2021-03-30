@@ -67,20 +67,32 @@ But, as you might have noticed, this means you need to create a lot more modules
 1. Create a Layout module
 
 ```elixir
-# lib/slick_web/live/backoffice/layout.ex
+# lib/your_app_web/live/backoffice/layout.ex
 # Icons are all from heroicons.com.
-defmodule SlickWeb.Backoffice.Layout do
+defmodule YourAppWeb.Backoffice.Layout do
   @behaviour Backoffice.Layout
 
+  def stylesheets do
+    [
+     Routes.static_path(YourAppWeb.Endpoint, "/css/app.css")
+    ]
+  end
+
+  def scripts do
+    [
+     Routes.static_path(YourAppWeb.Endpoint, "/js/admin.js")
+    ]
+  end
+
   def logo do
-    SlickWeb.Router.Helpers.static_path(SlickWeb.Endpoint, "/images/admin-logo.svg")
+    YourAppWeb.Router.Helpers.static_path(YourAppWeb.Endpoint, "/images/admin-logo.svg")
   end
 
   def links do
     [
       %{
         label: "User",
-        link: SlickWeb.Router.Helpers.user_index_path(SlickWeb.Endpoint, :index),
+        link: YourAppWeb.Router.Helpers.user_index_path(YourAppWeb.Endpoint, :index),
         icon: """
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -105,21 +117,21 @@ end
 
 ```elixir
 # config.exs
-config :backoffice, layout: SlickWeb.Backoffice.Layout
+config :backoffice, layout: YourAppWeb.Backoffice.Layout
 ```
 
 3. Create a resource module:
 
 ```elixir
-# lib/slick_web/live/backoffice/user.ex
-defmodule SlickWeb.Backoffice.UserLive.Index do
+# lib/your_app_web/live/backoffice/user.ex
+defmodule YourAppWeb.Backoffice.UserLive.Index do
   use Backoffice.Resources,
     resolver:
       {Backoffice.Resolvers.Ecto,
-       repo: Slick.Repo,
-       changeset: %{edit: &Slick.Accounts.User.update_changeset/2},
+       repo: YourApp.Repo,
+       changeset: %{edit: &YourApp.Accounts.User.update_changeset/2},
        preload: [:mailbox, :notification_preference]},
-    resource: Slick.Accounts.User
+    resource: YourApp.Accounts.User
 
   def create, do: true
   def edit, do: true
@@ -149,7 +161,7 @@ end
 4. Set-up your resource module in the route.
 
 ```elixir
-scope "/admin", SlickWeb, do
+scope "/admin", YourAppWeb, do
   live("/users", Backoffice.UserLive.Index, :index, layout: {Backoffice.LayoutView, :backoffice})
   live("/users/:id/edit", Backoffice.UserLive.Index, :edit,
       layout: {Backoffice.LayoutView, :backoffice}
