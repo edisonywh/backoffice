@@ -1,3 +1,11 @@
+<div>
+  <dl class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+    <%= for widget <- @widgets do %>
+      <%= Backoffice.Widget.render(widget) %>
+    <% end %>
+  </dl>
+</div>
+
 <div class="flex justify-between">
   <div>
     <%= live_component @socket, Backoffice.FilterComponent, id: :filter, params: @params %>

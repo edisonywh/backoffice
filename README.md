@@ -224,6 +224,49 @@ defmodule Backoffice.Resolvers.API do
 end
 ```
 
+## Widgets and Widget Protocol
+
+Backoffice currently ships with one widget, `Backoffice.PlainWidget`.
+
+To display widgets, just do:
+
+```elixir
+# lib/your_app_web/live/backoffice/user.ex
+
+def widgets(socket) do
+  [
+    %Backoffice.PlainWidget{
+      title: "Total Collection",
+      data: "12"
+    }
+  ]
+end
+```
+
+Widgets in Backoffice are rendered with a protocol, so it is very easy for you to write one. You can refer to `Backoffice.PlainWidget`.
+
+```elixir
+defmodule YourWidget do
+  defimpl Backoffice.Widget do
+    def render do
+      "Your Widget here"
+    end
+  end
+end
+```
+
+You can also render widget in your own custom page, just do `Backoffice.Widget.render(widget)`.
+
+## Custom pages
+
+Backoffice sits right next to your existing routes, this means to render custom pages, you need to:
+
+```elixir
+live("/dashboard", Admin.DashboardLive, layout: {Backoffice.LayoutView, :backoffice})
+```
+
+That's it! If you visit `/dashboard` it'll sit nicely next to the rest of the Backoffice layout. If you want to add it to the `links` on the left panel, update the `links/0` function in the layout module you supplied to Backoffice.
+
 ## Can I use Backoffice in production?
 
 You sure can, but I would not really advise it. Although it's in active development now, Backoffice is still very early stage (Backoffice isn't even on Hex yet), so it's subject to a lot of API changes.
@@ -254,7 +297,6 @@ Other than that, here are some things I hope to improve:
 - [ ] Implement a test suite..
 - [ ] Localization support?
 - [ ] Authorisation?
-- [ ] Widget support (probably in the form of LiveComponents)
 - [ ] Better documentations
 
 ## Installation
