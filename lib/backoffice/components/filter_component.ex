@@ -74,8 +74,14 @@ defmodule Backoffice.FilterComponent do
   end
 
   @impl true
-  def handle_event("apply", %{"filter" => filter, "value" => value}, socket) do
+  def handle_event("apply", %{"filter" => filter, "value" => value}, socket)
+      when filter != "" and value != "" do
     send(self(), {:apply_filter, filter, value})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("apply", %{"filter" => _, "value" => _}, socket) do
     {:noreply, socket}
   end
 
