@@ -2,6 +2,7 @@ const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
   purge: [
+    '../lib/backoffice/components/*.ex',
     '../lib/backoffice/templates/**/*.eex',
     '../lib/backoffice/templates/**/*.leex',
     '../lib/backoffice/views/*.ex',
