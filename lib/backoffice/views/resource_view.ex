@@ -152,18 +152,18 @@ defmodule Backoffice.ResourceView do
 
   # TODO: Would be nice to support LiveComponent for more complex component
   #   For example, I would like to have a drop-down suggestion logic as I type.
-  # defp do_form_field(form, field, :component, opts) do
-  # component = Keyword.fetch!(opts, :component)
-  # opts = Keyword.merge(opts, form: form, field: field)
+  defp do_form_field(form, field, :component, opts) do
+    component = Keyword.fetch!(opts, :render)
+    opts = Keyword.merge(opts, value: input_value(form, field))
 
-  # live_component(socket, component, opts)
-  # end
+    live_component(_, component, opts)
+  end
 
   # Q: Are there any pitfall to allowing user render fields like this?
   defp do_form_field(form, field, :custom, opts) do
-    slot = Keyword.fetch!(opts, :render)
+    render = Keyword.fetch!(opts, :render)
 
-    slot.(form, field)
+    render.(form, field)
   end
 
   defp do_form_field(form, field, _type, opts) do
