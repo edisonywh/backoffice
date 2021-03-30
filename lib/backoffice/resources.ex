@@ -74,8 +74,7 @@ defmodule Backoffice.Resources do
                   |> Phoenix.Naming.humanize()
                 )
               }",
-            data: socket.assigns.resources.total_entries,
-            hint: "This is a hint text"
+            data: socket.assigns.resources.total_entries
           }
         ]
       end
