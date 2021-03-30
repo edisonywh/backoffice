@@ -11,6 +11,9 @@ defmodule Backoffice.PlainWidget do
         {:safe, ~s(<dd class="mt-1 text-3xl font-semibold text-gray-900">)},
         {:safe, to_string(widget.data)},
         {:safe, ~s(</dd>)},
+        {:safe, ~s(<dd class="mt-1 text-xs text-gray-400">)},
+        {:safe, to_string(widget.subtitle)},
+        {:safe, ~s(</dd>)},
         {:safe, ~s(</div>)}
       ]
     end
