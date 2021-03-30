@@ -1,7 +1,15 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-  purge: false,
+  purge: [
+    '../lib/backoffice/templates/**/*.eex',
+    '../lib/backoffice/templates/**/*.leex',
+    '../lib/backoffice/views/*.ex',
+    '../lib/backoffice/*.ex',
+    '../lib/backoffice/live/*.ex',
+    '../lib/backoffice/live/*.leex',
+    '../lib/backoffice/templates/resource/*.leex'
+  ],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
