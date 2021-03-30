@@ -38,12 +38,12 @@ defmodule Backoffice.FilterComponent do
         </button>
       </span>
     <% end %>
-    <button phx-target="<%= @myself %>" phx-click="add" type="button" class="inline-flex rounded-sm mt-1.5 items-center py-2 text-sm bg-gray-100 text-gray-700 flex-shrink-0 h-4 w-4 rounded-full items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-500 focus:outline-none focus:bg-gray-500 focus:text-white">
-      <span class="sr-only">Add filter</span>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <span phx-target="<%= @myself %>" phx-click="add" class="cursor-pointer inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
-    </button>
+      <p class="ml-0.5">Filter</p>
+    </span>
     <%= if @add do %>
       <form phx-submit="apply" phx-target="<%= @myself %>">
         <div class="bg-white absolute ml-4 p-4 rounded-md shadow-lg"">
