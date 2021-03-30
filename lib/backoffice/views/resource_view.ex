@@ -259,9 +259,9 @@ defmodule Backoffice.ResourceView do
     live_component(socket, Backoffice.ModalComponent, modal_opts)
   end
 
-  def page_nav(socket, %{page: page} = _params, route) do
-    previous_params = %{page: page.page_number - 1}
-    next_params = %{page: page.page_number + 1}
+  def page_nav(socket, %{page: page}, params, route) do
+    previous_params = Map.put(params, :page, page.page_number - 1)
+    next_params = Map.put(params, :page, page.page_number + 1)
 
     ~e"""
       <nav class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200 sm:px-6">
