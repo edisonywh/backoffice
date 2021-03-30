@@ -12,7 +12,18 @@ defmodule Backoffice.FormComponent do
      socket
      |> assign(assigns)
      |> assign(:resource, resource)
+     |> assign(:hidden_fields, [])
      |> assign(:changeset, changeset)}
+  end
+
+  def update(%{pick: field}, socket) do
+    hidden_fields = socket.assigns.hidden_fields
+
+    socket =
+      socket
+      |> assign(:hidden_fields, Keyword.merge(hidden_fields, List.wrap(field)))
+
+    {:ok, socket}
   end
 
   @impl true

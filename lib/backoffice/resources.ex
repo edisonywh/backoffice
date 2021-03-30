@@ -101,6 +101,12 @@ defmodule Backoffice.Resources do
          )}
       end
 
+      def handle_info({field, value}, socket) do
+        send_update(Backoffice.FormComponent, [{:id, socket.assigns.resource.id}, {field, value}])
+
+        {:noreply, socket}
+      end
+
       defp apply_action(socket, :new, page_opts) do
         socket
         |> assign(:form_fields, Backoffice.Resources.get_form_fields(__MODULE__, :new))
