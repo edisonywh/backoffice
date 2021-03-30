@@ -62,6 +62,24 @@ defmodule Backoffice.Resources do
         {:ok, socket}
       end
 
+      def widgets(socket) do
+        [
+          %Backoffice.PlainWidget{
+            title:
+              "Total #{
+                Phoenix.Naming.humanize(
+                  unquote(resource)
+                  |> Module.split()
+                  |> List.last()
+                  |> Phoenix.Naming.humanize()
+                )
+              }",
+            data: socket.assigns.resources.total_entries,
+            hint: "This is a hint text"
+          }
+        ]
+      end
+
       def render(assigns) do
         Phoenix.View.render(
           Backoffice.ResourceView,
@@ -142,6 +160,7 @@ defmodule Backoffice.Resources do
             page_opts
           )
         )
+        |> assign(:widgets, __MODULE__.widgets(socket))
       end
 
       def create, do: false
@@ -180,6 +199,7 @@ defmodule Backoffice.Resources do
         __form__: 0,
         create: 0,
         edit: 0,
+        widgets: 1,
         row_actions: 1,
         page_actions: 1
       )

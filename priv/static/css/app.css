@@ -959,6 +959,10 @@ select{
   border-radius: 0.375rem;
 }
 
+.rounded-lg{
+  border-radius: 0.5rem;
+}
+
 .rounded-full{
   border-radius: 9999px;
 }
@@ -1003,6 +1007,10 @@ select{
   display: inline-block;
 }
 
+.inline{
+  display: inline;
+}
+
 .flex{
   display: flex;
 }
@@ -1013,6 +1021,10 @@ select{
 
 .table{
   display: table;
+}
+
+.grid{
+  display: grid;
 }
 
 .hidden{
@@ -1116,6 +1128,11 @@ select{
   line-height: 2rem;
 }
 
+.text-3xl{
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
 .leading-4{
   line-height: 1rem;
 }
@@ -1126,6 +1143,10 @@ select{
 
 .leading-6{
   line-height: 1.5rem;
+}
+
+.m-4{
+  margin: 1rem;
 }
 
 .mx-auto{
@@ -1174,6 +1195,10 @@ select{
   margin-top: 1rem;
 }
 
+.mr-4{
+  margin-right: 1rem;
+}
+
 .mb-4{
   margin-bottom: 1rem;
 }
@@ -1184,6 +1209,10 @@ select{
 
 .mt-5{
   margin-top: 1.25rem;
+}
+
+.mb-5{
+  margin-bottom: 1.25rem;
 }
 
 .mt-6{
@@ -1311,6 +1340,11 @@ select{
   padding-right: 1rem;
 }
 
+.py-5{
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
 .py-6{
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
@@ -1393,6 +1427,10 @@ select{
   right: 0px;
 }
 
+.top-6{
+  top: 1.5rem;
+}
+
 *{
   --tw-shadow: 0 0 #0000;
 }
@@ -1455,6 +1493,10 @@ select{
 
 .text-left{
   text-align: left;
+}
+
+.text-center{
+  text-align: center;
 }
 
 .text-right{
@@ -1536,6 +1578,12 @@ select{
   color: rgba(255, 255, 255, var(--tw-text-opacity));
 }
 
+.truncate{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .uppercase{
   text-transform: uppercase;
 }
@@ -1546,6 +1594,10 @@ select{
 
 .align-middle{
   vertical-align: middle;
+}
+
+.invisible{
+  visibility: hidden;
 }
 
 .w-0{
@@ -1600,12 +1652,24 @@ select{
   z-index: 0;
 }
 
+.z-10{
+  z-index: 10;
+}
+
 .z-40{
   z-index: 40;
 }
 
 .focus\:z-10:focus{
   z-index: 10;
+}
+
+.gap-5{
+  gap: 1.25rem;
+}
+
+.grid-cols-1{
+  grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 .transform{
@@ -1755,6 +1819,10 @@ select{
 
   .sm\:mt-5{
     margin-top: 1.25rem;
+  }
+
+  .sm\:p-6{
+    padding: 1.5rem;
   }
 
   .sm\:px-6{
