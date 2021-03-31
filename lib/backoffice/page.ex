@@ -1,5 +1,5 @@
 defmodule Backoffice.Page do
-  @type t :: %{
+  @type t :: %__MODULE__{
           entries: [term()],
           page_number: integer(),
           page_size: integer(),
