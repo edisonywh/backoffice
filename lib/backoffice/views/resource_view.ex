@@ -263,7 +263,7 @@ defmodule Backoffice.ResourceView do
         <p class="text-sm leading-5 text-gray-700">
           Showing
           <span class="font-medium">
-            <%= page.page_number * page.page_size - page.page_size %>
+            <%= (page.page_number * page.page_size - page.page_size) + 1 %>
           </span>
           to
           <span class="font-medium">

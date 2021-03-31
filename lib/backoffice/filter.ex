@@ -20,6 +20,10 @@ defmodule Backoffice.Filter do
     {:skip, :page, value}
   end
 
+  def preprocess({"page_size", value}) do
+    {:skip, :page_num, value}
+  end
+
   def preprocess({field, <<"[gte]", value::binary>>}) do
     {:and, String.to_existing_atom(field), {:gte, String.to_integer(value)}}
   end
