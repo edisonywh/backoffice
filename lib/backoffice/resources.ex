@@ -128,7 +128,7 @@ defmodule Backoffice.Resources do
       end
 
       def handle_event("sort", %{"field" => field}, socket) do
-        order = apply_order(socket.assigns.params["order_by"], field)
+        order = Backoffice.Resources.apply_order(socket.assigns.params["order_by"], field)
 
         params =
           socket.assigns.params
@@ -206,9 +206,6 @@ defmodule Backoffice.Resources do
         |> assign(:widgets, __MODULE__.widgets(socket))
       end
 
-      defp apply_order(<<"[desc]", field::binary>>, field), do: "[asc]#{field}"
-      defp apply_order(rest, field), do: "[desc]#{field}"
-
       defoverridable(
         __index__: 0,
         __form__: 0,
@@ -274,4 +271,7 @@ defmodule Backoffice.Resources do
       _ -> mod.__form__()
     end
   end
+
+  def apply_order(<<"[desc]", field::binary>>, field), do: "[asc]#{field}"
+  def apply_order(rest, field), do: "[desc]#{field}"
 end
