@@ -273,5 +273,5 @@ defmodule Backoffice.Resources do
   end
 
   def apply_order(<<"[desc]", field::binary>>, field), do: "[asc]#{field}"
-  def apply_order(rest, field), do: "[desc]#{field}"
+  def apply_order(_rest, field), do: "[desc]#{field}"
 end
