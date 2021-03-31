@@ -40,7 +40,7 @@
       <table class="min-w-full table-fixed">
         <thead>
           <tr>
-            <%= for {field, opts} = field_tuple <- @fields do %>
+            <%= for {field, _opts} = field_tuple <- @fields do %>
               <th
                 phx-click="sort"
                 phx-value-field="<%= field %>"

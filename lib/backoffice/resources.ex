@@ -79,12 +79,14 @@ defmodule Backoffice.Resources do
                   |> Phoenix.Naming.humanize()
                 )
               }",
-            data: socket.assigns.resources.total_entries
+            data: socket.assigns.total_entries
           }
         ]
       end
 
       def mount(params, session, socket) do
+        resources = unquote(resolver).load(unquote(resource), unquote(resolver_opts), %{})
+
         socket =
           socket
           |> assign(:fields, __MODULE__.__index__())
@@ -103,9 +105,8 @@ defmodule Backoffice.Resources do
             :page_title,
             unquote(resource) |> Module.split() |> List.last() |> Phoenix.Naming.humanize()
           )
-          |> assign_new(:resources, fn ->
-            unquote(resolver).load(unquote(resource), unquote(resolver_opts), %{})
-          end)
+          |> assign(:resources, resources)
+          |> assign(:total_entries, resources.total_entries)
 
         {:ok, socket}
       end
@@ -273,5 +274,5 @@ defmodule Backoffice.Resources do
   end
 
   def apply_order(<<"[desc]", field::binary>>, field), do: "[asc]#{field}"
-  def apply_order(rest, field), do: "[desc]#{field}"
+  def apply_order(_rest, field), do: "[desc]#{field}"
 end
