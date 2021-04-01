@@ -1,6 +1,6 @@
 defmodule Backoffice.Resources do
   @callback __index__() :: term()
-  @callback row_actions(term()) :: term()
+  @callback single_actions(term()) :: term()
 
   defmacro __using__(opts) do
     {resolver, resolver_opts} = Keyword.fetch!(opts, :resolver)
@@ -16,6 +16,7 @@ defmodule Backoffice.Resources do
 
       Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :form_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :actions, accumulate: true)
 
       index do
         schema = Backoffice.Resources.resolve_schema(unquote(resource))
@@ -36,35 +37,9 @@ defmodule Backoffice.Resources do
         end
       end
 
-      def create, do: false
-      def edit, do: false
-
-      def page_actions(socket) do
-        if __MODULE__.create() do
-          [
-            create: %{
-              # BUG: If user doesn't define :new in router, this will fail.
-              #   How can I dynamically toggle this?
-              link: Backoffice.Resources.get_path(__MODULE__, socket, :new, [])
-            }
-          ]
-        else
-          []
-        end
-      end
-
-      def row_actions(socket) do
-        if __MODULE__.edit() do
-          [
-            edit: %{
-              link: fn resource ->
-                Backoffice.Resources.get_path(__MODULE__, socket, :edit, resource)
-              end
-            }
-          ]
-        else
-          []
-        end
+      actions do
+        action(:new, type: :page, label: "Create", handler: &__MODULE__.default_new/2)
+        action(:edit, type: :single, handler: &__MODULE__.default_edit/2)
       end
 
       def widgets(socket) do
@@ -87,13 +62,19 @@ defmodule Backoffice.Resources do
       def mount(params, session, socket) do
         resources = unquote(resolver).load(unquote(resource), unquote(resolver_opts), %{})
 
+        {single, page} =
+          __MODULE__.__actions__()
+          |> Enum.filter(fn {k, v} -> v.enabled end)
+          |> Enum.filter(&Backoffice.Resources.has_path?(__MODULE__, socket, &1))
+          |> Enum.split_with(fn {k, v} -> v.type == :single end)
+
         socket =
           socket
           |> assign(:fields, __MODULE__.__index__())
           |> assign(:form_fields, __MODULE__.__form__())
           |> assign(:resolver, {unquote(resolver), unquote(resolver_opts)})
-          |> assign(:row_actions, __MODULE__.row_actions(socket))
-          |> assign(:page_actions, __MODULE__.page_actions(socket))
+          |> assign(:single_actions, Enum.reverse(single))
+          |> assign(:page_actions, Enum.reverse(page))
           |> assign(:route_func, fn socket, params, action ->
             Backoffice.Resources.get_path(__MODULE__, socket, params, action)
           end)
@@ -141,6 +122,15 @@ defmodule Backoffice.Resources do
          )}
       end
 
+      def handle_event("bo-action", %{"action" => action, "id" => id}, socket) do
+        action =
+          action
+          |> String.to_existing_atom()
+          |> __MODULE__.__action__()
+
+        {:noreply, action.handler.(socket, id)}
+      end
+
       def handle_info({:apply_filter, filter, value}, socket) do
         params =
           socket.assigns.params
@@ -179,6 +169,7 @@ defmodule Backoffice.Resources do
         socket
         |> assign(:page_title, "Edit")
         |> assign(:form_fields, Backoffice.Resources.get_form_fields(__MODULE__, :edit))
+        |> assign(:widgets, [])
         |> assign(
           :resource,
           unquote(resolver).get(unquote(resource), unquote(resolver_opts), page_opts)
@@ -207,14 +198,19 @@ defmodule Backoffice.Resources do
         |> assign(:widgets, __MODULE__.widgets(socket))
       end
 
+      def default_new(socket, id) do
+        push_patch(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, []))
+      end
+
+      def default_edit(socket, id) do
+        push_patch(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))
+      end
+
       defoverridable(
         __index__: 0,
         __form__: 0,
-        create: 0,
-        edit: 0,
-        widgets: 1,
-        row_actions: 1,
-        page_actions: 1
+        __actions__: 0,
+        widgets: 1
       )
     end
   end
@@ -239,6 +235,20 @@ defmodule Backoffice.Resources do
     raise ArgumentError, "Cannot automatically determine the schema of
       #{inspect(unknown)} - specify the :schema option"
   end
+
+  # This is a pretty hacky way for us to figure out whether or not a path was defined
+  # so we can decide whether to render the Create/Edit button.
+  def has_path?(mod, socket, {action, _}) when action in [:new, :edit] do
+    try do
+      params = if action == :new, do: [], else: 1
+      get_path(mod, socket, action, params)
+      true
+    rescue
+      _ -> false
+    end
+  end
+
+  def has_path?(_, _, _), do: true
 
   # TODO: this is so hacky, plz send halp.
   def get_path(module, socket, action, resource_or_params \\ []) do

@@ -24,6 +24,49 @@ defmodule Backoffice.DSL do
     end
   end
 
+  defmacro actions(do: block) do
+    actions(__CALLER__, block)
+  end
+
+  def actions(_caller, block) do
+    prelude =
+      quote do
+        import Backoffice.DSL
+        unquote(block)
+      end
+
+    postlude =
+      quote unquote: false do
+        def __actions__(), do: unquote(@actions)
+
+        for {name, body} <- @actions do
+          def __action__(unquote(name)), do: unquote(body)
+        end
+      end
+
+    quote do
+      Module.delete_attribute(__MODULE__, :actions)
+      unquote(prelude)
+      unquote(postlude)
+    end
+  end
+
+  defmacro action(name, opts \\ []) do
+    quote do
+      Backoffice.DSL.__action__(__ENV__, __MODULE__, unquote(name), unquote(opts))
+    end
+  end
+
+  def __action__(_env, mod, name, opts) do
+    opts =
+      [enabled: true, confirm: false]
+      |> Keyword.merge(opts)
+      |> Keyword.take([:type, :enabled, :handler, :confirm, :label])
+      |> Enum.into(%{})
+
+    Module.put_attribute(mod, :actions, {name, Macro.escape(opts)})
+  end
+
   defmacro form(action \\ nil, do: block) do
     form(__CALLER__, action, block)
   end
