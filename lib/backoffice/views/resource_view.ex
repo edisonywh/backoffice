@@ -227,25 +227,15 @@ defmodule Backoffice.ResourceView do
     Map.get(resource, field)
   end
 
-  def action_name(field) when is_atom(field), do: action_name({field, nil})
-  def action_name({field, nil}), do: Phoenix.Naming.humanize(field)
-
-  def action_name({action, opts}) when is_map(opts) do
-    case opts[:name] do
+  def action_name(action, opts) when is_map(opts) do
+    case opts[:label] do
       nil -> Phoenix.Naming.humanize(action)
-      name -> name
+      label -> label
     end
   end
 
-  def action_link({_action, opts}) do
-    opts[:link]
-  end
-
-  def action_link({_action, opts}, resource) do
-    case opts[:link] do
-      link -> link.(resource)
-    end
-  end
+  def maybe_confirm(%{confirm: false}), do: ""
+  def maybe_confirm(%{confirm: msg}), do: {:safe, ["data-confirm=", "\"", msg, "\""]}
 
   def live_modal(_socket, component, opts) do
     return_to = Keyword.fetch!(opts, :return_to)

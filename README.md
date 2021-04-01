@@ -133,8 +133,20 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
        preload: [:mailbox, :notification_preference]},
     resource: YourApp.Accounts.User
 
-  def create, do: true
-  def edit, do: true
+  actions do
+    action :create, type: :page, handler: &__MODULE__.create/2
+    action :retry, type: :row, handler: &__MODULE__.retry/2
+  end
+
+  def retry(socket, resource_id) do
+    ...
+    socket
+  end
+
+  # Right now second argument to create is nil, but we might pass down list of ids down the road.
+  def create(socket, nil) do
+    push_patch(socket, to: YourApp.Router.Helpers.user_index_live(socket, :new, []))
+  end
 
   index do
     field :id
@@ -249,7 +261,7 @@ Widgets in Backoffice are rendered with a protocol, so it is very easy for you t
 defmodule YourWidget do
   defimpl Backoffice.Widget do
     def render do
-      "Your Widget here"
+      {:safe, "Your Widget here"}
     end
   end
 end
@@ -267,18 +279,42 @@ live("/dashboard", Admin.DashboardLive, layout: {Backoffice.LayoutView, :backoff
 
 That's it! If you visit `/dashboard` it'll sit nicely next to the rest of the Backoffice layout. If you want to add it to the `links` on the left panel, update the `links/0` function in the layout module you supplied to Backoffice.
 
+## Actions
+
+Backoffice has two kinds of actions: `Page` and `Single`.
+
+Page actions go on the top right of the page, whereas `Single` actions go inside each row.
+
+Here's what an example actions set-up look like.
+
+```elixir
+actions do
+  action :create, type: :page, handler: &__MODULE__.create/2 # :label & :confirm are valid options
+  action :retry, type: :row, handler: &__MODULE__.retry/2
+end
+
+def retry(socket, resource_id) do
+  ...
+  socket
+end
+
+# Right now second argument to create is nil, but we might pass down list of ids down the road.
+def create(socket, nil) do
+  push_patch(socket, to: YourApp.Router.Helpers.user_index_live(socket, :new, []))
+end
+```
+
 ## Can I use Backoffice in production?
 
-You sure can, but I would not really advise it. Although it's in active development now, Backoffice is still very early stage (Backoffice isn't even on Hex yet), so it's subject to a lot of API changes.
+You sure can, but I would not really advise it. Although it's in active development now, Backoffice is still very early stage (Backoffice isn't even on Hex yet), so it's subject to a lot of API changes. **Expect changes without notice in this early stage.**
 
-For what it's worth, I am dogfodding it in production with [Slick Inbox](https://slickinbox.com).
+For what it's worth, I am dogfooding it in production with [Slick Inbox](https://slickinbox.com).
 
 There are quite a number of issues right now:
 
 - [ ] Editing :map doesn't work
 - [ ] Index & Form fields default might not be the best (form fields right now attempts to show assocs, but you need to explicitly preload it and you can't edit them yet.)
 - [ ] Association support is not great
-- [ ] Tailwind CSS is not being purged now, so the CSS file is about 3MB.
 - [ ] etc...
 
 But, I encourage you to try it out anyway and contribute, and together we can make Backoffice great :)
@@ -291,9 +327,8 @@ Other than that, here are some things I hope to improve:
 
 - [ ] Better support for associations?
 - [ ] Custom color?
-- [ ] Custom pages
 - [ ] Datepicker support
-- [ ] LiveComponent support (WIP. Required for complex form fields)
+- [ ] LiveComponent support (It is possible now, but I want to refine the API)
 - [ ] Implement a test suite..
 - [ ] Localization support?
 - [ ] Authorisation?
