@@ -1,7 +1,4 @@
 defmodule Backoffice.Resources do
-  @callback __index__() :: term()
-  @callback single_actions(term()) :: term()
-
   defmacro __using__(opts) do
     {resolver, resolver_opts} = Keyword.fetch!(opts, :resolver)
     resource = Keyword.fetch!(opts, :resource)
@@ -11,8 +8,6 @@ defmodule Backoffice.Resources do
       use Phoenix.LiveView, unquote(live_opts)
 
       import Backoffice.DSL, only: [index: 1, form: 1, form: 2]
-
-      @behaviour Backoffice.Resources
 
       Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :form_fields, accumulate: true)
@@ -154,7 +149,10 @@ defmodule Backoffice.Resources do
       end
 
       def handle_info({field, value}, socket) do
-        send_update(Backoffice.FormComponent, [{:id, socket.assigns.resource.id}, {field, value}])
+        send_update(Backoffice.FormComponent, [
+          {:id, socket.assigns.resource.id || :new},
+          {field, value}
+        ])
 
         {:noreply, socket}
       end
@@ -162,6 +160,7 @@ defmodule Backoffice.Resources do
       defp apply_action(socket, :new, page_opts) do
         socket
         |> assign(:form_fields, Backoffice.Resources.get_form_fields(__MODULE__, :new))
+        |> assign(:widgets, [])
         |> assign(:resource, %unquote(resource){})
       end
 
