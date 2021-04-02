@@ -14,8 +14,15 @@ defmodule Backoffice.Resolvers.Ecto do
 
     case changeset do
       nil ->
-        struct
-        |> apply(:changeset, [resource, attrs])
+        case function_exported?(struct, changeset, 2) do
+          true ->
+            struct
+            |> apply(:changeset, [resource, attrs])
+
+          _ ->
+            resource
+            |> Ecto.Changeset.change(atomize_keys(attrs))
+        end
 
       _ ->
         changeset.(resource, attrs)
@@ -66,6 +73,24 @@ defmodule Backoffice.Resolvers.Ecto do
     resource
     |> preload([q], ^preloads)
     |> repo.get(id)
+  end
+
+  defp atomize_keys(map) when is_map(map) do
+    for {k, v} <- map do
+      {String.to_existing_atom(k), maybe_cast(v)}
+    end
+  end
+
+  # TODO: Refactor this to utilize the type declaration in `index_fields`/`form_fields`
+  defp maybe_cast(string) when string in ~w(true nil false) do
+    String.to_existing_atom(string)
+  end
+
+  defp maybe_cast(string) do
+    case Integer.parse(string) do
+      :error -> string
+      {value, ""} -> value
+    end
   end
 
   # Filters
