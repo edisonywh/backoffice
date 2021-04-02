@@ -71,21 +71,23 @@ But, as you might have noticed, this means you need to create a lot more modules
 # Icons are all from heroicons.com.
 defmodule YourAppWeb.Backoffice.Layout do
   @behaviour Backoffice.Layout
+  
+  alias YourAppWeb.Routes.Helpers, as: Routes
 
   def stylesheets do
     [
-     Routes.static_path(YourAppWeb.Endpoint, "/css/app.css")
+      Routes.static_path(YourAppWeb.Endpoint, "/css/app.css")
     ]
   end
 
   def scripts do
     [
-     Routes.static_path(YourAppWeb.Endpoint, "/js/admin.js")
+      Routes.static_path(YourAppWeb.Endpoint, "/js/admin.js")
     ]
   end
 
   def logo do
-    YourAppWeb.Router.Helpers.static_path(YourAppWeb.Endpoint, "/images/admin-logo.svg")
+    Routes.static_path(YourAppWeb.Endpoint, "/images/admin-logo.svg")
   end
 
   def links do
@@ -135,7 +137,7 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
 
   actions do
     action :create, type: :page, handler: &__MODULE__.create/2
-    action :retry, type: :row, handler: &__MODULE__.retry/2
+    action :retry, type: :single, handler: &__MODULE__.retry/2
   end
 
   def retry(socket, resource_id) do
@@ -290,7 +292,7 @@ Here's what an example actions set-up look like.
 ```elixir
 actions do
   action :create, type: :page, handler: &__MODULE__.create/2 # :label & :confirm are valid options
-  action :retry, type: :row, handler: &__MODULE__.retry/2
+  action :retry, type: :single, handler: &__MODULE__.retry/2
 end
 
 def retry(socket, resource_id) do
