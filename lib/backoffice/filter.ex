@@ -14,8 +14,6 @@ defmodule Backoffice.Filter do
     /admin/users?processed_at=[not]nil # not nil
   """
 
-  import Ecto.Query
-
   def preprocess({"page", value}) do
     {:skip, :page, value}
   end
@@ -75,71 +73,6 @@ defmodule Backoffice.Filter do
 
   defp preprocess_date(field, %{"to" => to}) do
     {:and, String.to_existing_atom(field), {:lt, to_naive_datetime(to)}}
-  end
-
-  def apply_filter(query, {:skip, _field, _value}, _type), do: query
-
-  def apply_filter(query, {:and, field, {:lt, value}}, _type) do
-    query
-    |> where([q], field(q, ^field) < ^value)
-  end
-
-  def apply_filter(query, {:and, field, {:lte, value}}, _type) do
-    query
-    |> where([q], field(q, ^field) <= ^value)
-  end
-
-  def apply_filter(query, {:and, field, {:gt, value}}, _type) do
-    query
-    |> where([q], field(q, ^field) > ^value)
-  end
-
-  def apply_filter(query, {:and, field, {:gte, value}}, _type) do
-    query
-    |> where([q], field(q, ^field) >= ^value)
-  end
-
-  def apply_filter(query, {:and, :order_by, {:desc, field}}, _type) do
-    query
-    |> order_by([q], {:desc, field(q, ^field)})
-  end
-
-  def apply_filter(query, {:and, :order_by, {:asc, field}}, _type) do
-    query
-    |> order_by([q], {:asc, field(q, ^field)})
-  end
-
-  def apply_filter(query, {:and, field, {:contains, nil}}, _type) do
-    query
-    |> where([q], is_nil(field(q, ^field)))
-  end
-
-  def apply_filter(query, {:and, field, {:contains, value}}, type)
-      when type in [:id, :integer, :boolean] do
-    query
-    |> where([q], field(q, ^field) == ^value)
-  end
-
-  def apply_filter(query, {:and, field, {:contains, value}}, _type) do
-    value =
-      value
-      |> String.replace("%", "\%")
-      |> String.replace("_", "\_")
-
-    value = "%#{value}%"
-
-    query
-    |> where([q], ilike(field(q, ^field), ^value))
-  end
-
-  def apply_filter(query, {:and, field, {:not, nil}}, _type) do
-    query
-    |> where([q], not is_nil(field(q, ^field)))
-  end
-
-  def apply_filter(query, {:and, field, {:not, value}}, _type) do
-    query
-    |> where([q], field(q, ^field) != ^value)
   end
 
   def to_naive_datetime(string) do

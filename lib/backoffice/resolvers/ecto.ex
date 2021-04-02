@@ -52,7 +52,7 @@ defmodule Backoffice.Resolvers.Ecto do
     |> Enum.map(&Backoffice.Filter.preprocess/1)
     |> List.flatten()
     |> Enum.reduce(resource, fn {_, field, _} = filter, acc ->
-      Backoffice.Filter.apply_filter(acc, filter, resource.__schema__(:type, field))
+      apply_filter(acc, filter, resource.__schema__(:type, field))
     end)
     |> load(resolver_opts, page_opts)
   end
@@ -66,6 +66,73 @@ defmodule Backoffice.Resolvers.Ecto do
     resource
     |> preload([q], ^preloads)
     |> repo.get(id)
+  end
+
+  # Filters
+
+  defp apply_filter(query, {:skip, _field, _value}, _type), do: query
+
+  defp apply_filter(query, {:and, field, {:lt, value}}, _type) do
+    query
+    |> where([q], field(q, ^field) < ^value)
+  end
+
+  defp apply_filter(query, {:and, field, {:lte, value}}, _type) do
+    query
+    |> where([q], field(q, ^field) <= ^value)
+  end
+
+  defp apply_filter(query, {:and, field, {:gt, value}}, _type) do
+    query
+    |> where([q], field(q, ^field) > ^value)
+  end
+
+  defp apply_filter(query, {:and, field, {:gte, value}}, _type) do
+    query
+    |> where([q], field(q, ^field) >= ^value)
+  end
+
+  defp apply_filter(query, {:and, :order_by, {:desc, field}}, _type) do
+    query
+    |> order_by([q], {:desc, field(q, ^field)})
+  end
+
+  defp apply_filter(query, {:and, :order_by, {:asc, field}}, _type) do
+    query
+    |> order_by([q], {:asc, field(q, ^field)})
+  end
+
+  defp apply_filter(query, {:and, field, {:contains, nil}}, _type) do
+    query
+    |> where([q], is_nil(field(q, ^field)))
+  end
+
+  defp apply_filter(query, {:and, field, {:contains, value}}, type)
+       when type in [:id, :integer, :boolean] do
+    query
+    |> where([q], field(q, ^field) == ^value)
+  end
+
+  defp apply_filter(query, {:and, field, {:contains, value}}, _type) do
+    value =
+      value
+      |> String.replace("%", "\%")
+      |> String.replace("_", "\_")
+
+    value = "%#{value}%"
+
+    query
+    |> where([q], ilike(field(q, ^field), ^value))
+  end
+
+  defp apply_filter(query, {:and, field, {:not, nil}}, _type) do
+    query
+    |> where([q], not is_nil(field(q, ^field)))
+  end
+
+  defp apply_filter(query, {:and, field, {:not, value}}, _type) do
+    query
+    |> where([q], field(q, ^field) != ^value)
   end
 
   # Pagination, code adapted from `Scrivener.Ecto`
