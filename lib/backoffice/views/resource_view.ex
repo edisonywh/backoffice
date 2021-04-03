@@ -179,6 +179,12 @@ defmodule Backoffice.ResourceView do
     text_input(form, field, opts)
   end
 
+  def get_class(%{class: class}), do: class
+
+  def get_class(_) do
+    "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+  end
+
   def sort_indicator(params, field) when is_atom(field) do
     sort_indicator(params, to_string(field))
   end
