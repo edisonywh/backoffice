@@ -61,7 +61,7 @@ defmodule Backoffice.DSL do
     opts =
       [enabled: true, confirm: false]
       |> Keyword.merge(opts)
-      |> Keyword.take([:type, :enabled, :handler, :confirm, :label])
+      |> Keyword.take([:type, :enabled, :handler, :confirm, :label, :class])
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :actions, {name, Macro.escape(opts)})
