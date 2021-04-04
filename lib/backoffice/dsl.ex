@@ -118,6 +118,50 @@ defmodule Backoffice.DSL do
     Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
   end
 
+  defmacro belongs_to(name, schema, opts \\ []) do
+    quote do
+      Backoffice.DSL.__belongs_to__(
+        __ENV__,
+        __MODULE__,
+        unquote(name),
+        unquote(schema),
+        unquote(opts)
+      )
+    end
+  end
+
+  def __belongs_to__(_env, mod, name, schema, opts) do
+    opts =
+      opts
+      |> Keyword.merge(type: {:assoc, %Ecto.Association.BelongsTo{related: schema}})
+      |> Enum.into(%{})
+
+    Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
+    Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
+  end
+
+  defmacro has_one(name, schema, opts \\ []) do
+    quote do
+      Backoffice.DSL.__has_one__(
+        __ENV__,
+        __MODULE__,
+        unquote(name),
+        unquote(schema),
+        unquote(opts)
+      )
+    end
+  end
+
+  def __has_one__(_env, mod, name, schema, opts) do
+    opts =
+      opts
+      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{related: schema}})
+      |> Enum.into(%{})
+
+    Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
+    Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
+  end
+
   defmacro field(name, type \\ nil, opts \\ []) do
     quote do
       Backoffice.DSL.__field__(__ENV__, __MODULE__, unquote(name), unquote(type), unquote(opts))
