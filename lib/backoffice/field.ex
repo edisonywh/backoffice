@@ -87,6 +87,44 @@ defmodule Backoffice.Field do
     end)
   end
 
+  defp do_form_field(form, field, {:assoc, %{cardinality: :many, related: schema}}, opts) do
+    inputs_for(form, field, fn fp ->
+      fields = schema.__schema__(:fields)
+      types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+      fields =
+        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
+          {k, %{type: v}}
+        end
+
+      [
+        {:safe, "<thead>"},
+        {:safe, "<tr>"},
+        Enum.map(fields, fn {field, %{type: _type}} ->
+          [
+            {:safe, "<td class=\"px-6 py-4 whitespace\">"},
+            {:safe, Backoffice.ResourceView.column_name({field, %{}})},
+            {:safe, "</td>"}
+          ]
+        end),
+        {:safe, "</tr>"},
+        {:safe, "</thead>"},
+        {:safe, "<tbody class=\"bg-white\">"},
+        {:safe, "<tr class=\"border-b border-gray-200\""},
+        Enum.map(fields, fn {field, %{type: _type}} ->
+          [
+            {:safe, "<td class=\"px-6 py-4 whitespace\">"},
+            {:safe, Backoffice.ResourceView.column_value(fp.data, {field, %{}})},
+            {:safe, "</td>"}
+          ]
+        end),
+        {:safe, "</tr>"},
+        {:safe, "</tbody>"}
+      ]
+      |> List.flatten()
+    end)
+  end
+
   defp do_form_field(form, field, {:assoc, %{related: schema}}, opts) do
     inputs_for(form, field, fn fp ->
       fields = schema.__schema__(:fields)

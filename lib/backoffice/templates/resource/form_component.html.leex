@@ -1,10 +1,9 @@
-<h2 class="text-lg leading-6 font-medium text-gray-900"><%= @title %></h2>
-
 <%= f = form_for @changeset, "#",
   id: "form",
   phx_target: @myself,
   phx_change: "validate",
   phx_submit: "save",
+  class: "p-8 bg-gray-50 rounded-lg shadow",
   as: "resource" %>
   <%= for {field, opts} <- @form_fields do %>
     <div class="mt-6 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">

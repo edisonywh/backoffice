@@ -155,7 +155,29 @@ defmodule Backoffice.DSL do
   def __has_one__(_env, mod, name, schema, opts) do
     opts =
       opts
-      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{related: schema}})
+      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{cardinality: :one, related: schema}})
+      |> Enum.into(%{})
+
+    Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
+    Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
+  end
+
+  defmacro has_many(name, schema, opts \\ []) do
+    quote do
+      Backoffice.DSL.__has_many__(
+        __ENV__,
+        __MODULE__,
+        unquote(name),
+        unquote(schema),
+        unquote(opts)
+      )
+    end
+  end
+
+  def __has_many__(_env, mod, name, schema, opts) do
+    opts =
+      opts
+      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{cardinality: :many, related: schema}})
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})

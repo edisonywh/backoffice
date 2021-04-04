@@ -6,8 +6,8 @@ defmodule Backoffice.ErrorHelper do
 
     Enum.map(Keyword.get_values(form.errors, field), fn {error, _} ->
       content_tag(:span, error,
-        class: "text-xs text-red-500 " <> class,
-        data: [phx_error_for: input_id(form, field)]
+        class: "invalid-feedback text-xs text-red-500 " <> class,
+        phx_feedback_for: input_name(form, field)
       )
     end)
   end

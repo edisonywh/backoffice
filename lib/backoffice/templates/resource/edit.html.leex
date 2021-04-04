@@ -1,0 +1,60 @@
+<div class="max-w-7xl mx-auto mb-4">
+  <div class="flex items-center flex-start">
+    <%= Phoenix.LiveView.Helpers.live_redirect to: @return_to do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+    <% end %>
+    <h1 class="ml-3 text-2xl font-semibold text-gray-900"><%= @page_title %></h1>
+  </div>
+</div>
+
+<%= live_component @socket, Backoffice.FormComponent,
+  id: @resource.id || :new,
+  title: @page_title,
+  action: @action,
+  resource: @resource,
+  resolver: @resolver,
+  form_fields: @form_fields,
+  has_many: @has_many,
+  return_to: @return_to
+%>
+
+<%= if not Enum.empty?(@has_many) do %>
+  <%= for {assoc, _opts} <- @has_many do %>
+    <% if not Enum.empty?(Map.get(@resource, assoc)) do %>
+      <h2 class="mt-12 mb-4 text-lg leading-6 font-medium text-gray-900"><%= Phoenix.Naming.humanize(assoc) %></h2>
+      <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+          <table class="min-w-full table-fixed">
+            <thead>
+              <tr>
+                <%= for {field, opts} <- Backoffice.ResourceView.fields_for(Map.get(@resource, assoc)) do %>
+                  <th
+                    class="w-1/12 px-6 py-3 cursor-pointer border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    <%= Backoffice.ResourceView.column_name({field, opts}) %>
+                  </th>
+                <% end %>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white">
+              <%= for resource <- Map.get(@resource, assoc) do %>
+                <tr class="border-b border-gray-200">
+                  <%= for field <- Backoffice.ResourceView.fields_for(resource) do %>
+                    <td class="px-6 py-4 whitespace">
+                      <div class="text-sm leading-5 text-gray-900">
+                        <%= Backoffice.ResourceView.column_value(resource, field) %>
+                      </div>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

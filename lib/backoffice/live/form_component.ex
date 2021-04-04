@@ -1,8 +1,14 @@
 defmodule Backoffice.FormComponent do
   use Phoenix.LiveComponent
-  use Phoenix.HTML
 
-  import Backoffice.ErrorHelper
+  @impl true
+  def render(assigns) do
+    Phoenix.View.render(
+      Backoffice.ResourceView,
+      "form_component.html",
+      assigns
+    )
+  end
 
   @impl true
   def update(%{resource: resource, resolver: {resolver, opts}, action: action} = assigns, socket) do

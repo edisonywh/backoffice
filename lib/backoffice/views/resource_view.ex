@@ -6,8 +6,20 @@ defmodule Backoffice.ResourceView do
     namespace: Backoffice
 
   import Phoenix.LiveView.Helpers
+  import Backoffice.ErrorHelper
 
   defdelegate form_field(form, field, opts), to: Backoffice.Field
+
+  def fields_for(resource) do
+    schema = Backoffice.Resources.resolve_schema(resource)
+
+    fields = schema.__schema__(:fields)
+    types = Enum.map(fields, &schema.__schema__(:type, &1))
+
+    for {field, type} <- Enum.zip(fields, types), not is_tuple(type) do
+      {field, %{type: type}}
+    end
+  end
 
   def get_class(%{class: class}), do: class
 
