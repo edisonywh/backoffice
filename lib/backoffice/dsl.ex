@@ -96,6 +96,28 @@ defmodule Backoffice.DSL do
     end
   end
 
+  defmacro embeds_one(name, schema, opts \\ []) do
+    quote do
+      Backoffice.DSL.__embeds_one__(
+        __ENV__,
+        __MODULE__,
+        unquote(name),
+        unquote(schema),
+        unquote(opts)
+      )
+    end
+  end
+
+  def __embeds_one__(_env, mod, name, schema, opts) do
+    opts =
+      opts
+      |> Keyword.merge(type: {:embed, %{related: schema}})
+      |> Enum.into(%{})
+
+    Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
+    Module.put_attribute(mod, :form_fields, {name, Macro.escape(opts)})
+  end
+
   defmacro field(name, type \\ nil, opts \\ []) do
     quote do
       Backoffice.DSL.__field__(__ENV__, __MODULE__, unquote(name), unquote(type), unquote(opts))
