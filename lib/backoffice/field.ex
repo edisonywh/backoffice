@@ -15,7 +15,16 @@ defmodule Backoffice.Field do
   end
 
   defp do_form_field(form, field, :textarea, opts) do
-    textarea(form, field, build_opts(:textare, opts))
+    opts =
+      build_opts(
+        :textarea,
+        Map.merge(opts, %{
+          rows: 4,
+          value: Phoenix.json_library().encode!(input_value(form, field), pretty: true)
+        })
+      )
+
+    textarea(form, field, opts)
   end
 
   defp do_form_field(form, field, {:parameterized, Ecto.Enum, %{values: values}} = type, opts) do
@@ -24,19 +33,14 @@ defmodule Backoffice.Field do
     select(form, field, options, build_opts(type, opts))
   end
 
-  # BUG: updating map field doesn't work now
   defp do_form_field(form, field, :map, opts) do
-    opts = build_opts(:map, Map.merge(opts, %{value: input_value(form, field)}))
-
-    textarea(form, field, opts)
+    do_form_field(form, field, :textarea, opts)
   end
 
   defp do_form_field(form, field, :boolean, opts) do
     checkbox(form, field, build_opts(:boolean, opts))
   end
 
-  # TODO: Would be nice to support LiveComponent for more complex component
-  #   For example, I would like to have a drop-down suggestion logic as I type.
   defp do_form_field(form, field, :component, opts) do
     component = Map.fetch!(opts, :render)
     opts = Map.merge(opts, %{value: input_value(form, field)})
@@ -44,7 +48,6 @@ defmodule Backoffice.Field do
     live_component(_, component, opts)
   end
 
-  # Q: Are there any pitfall to allowing user render fields like this?
   defp do_form_field(form, field, :custom, opts) do
     render = Map.fetch!(opts, :render)
 
@@ -101,47 +104,48 @@ defmodule Backoffice.Field do
   defp build_opts(type, opts) do
     opts = Enum.into(opts, %{})
 
-    %{class: default_style(type, opts)}
+    class = type |> default_style() |> maybe_disabled(opts)
+
+    %{class: class}
     |> Map.merge(opts)
     |> Enum.into([])
   end
 
-  def default_style(:label, _opts) do
+  def default_style(:label) do
     "block text-sm font-medium leading-5 text-gray-700"
   end
 
-  def default_style(:textarea, opts) do
-    "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+  def default_style(:textarea) do
+    "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md col-span-2"
   end
 
-  def default_style({:embed, _}, opts) do
-    "#{maybe_disabled(opts)} mt-2 mb-4 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+  def default_style({:embed, _}) do
+    "mt-2 mb-4 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
   end
 
-  def default_style({:parameterized, Ecto.Enum, _}, opts) do
-    "#{maybe_disabled(opts)} mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+  def default_style({:parameterized, Ecto.Enum, _}) do
+    "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
   end
 
-  def default_style(:map, opts) do
-    default_style(:default, opts)
+  def default_style(:map) do
+    default_style(:textarea)
   end
 
-  def default_style(:boolean, _opts) do
+  def default_style(:boolean) do
     "focus:ring-indigo-500 h-4 w-4 mt-2 mb-4 text-indigo-600 border-gray-300 rounded transition"
   end
 
-  def default_style(:integer, opts) do
-    default_style(:default, opts)
+  def default_style(:integer) do
+    default_style(:default)
   end
 
-  def default_style(_type, opts) do
-    "#{maybe_disabled(opts)} mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
+  def default_style(_type) do
+    "mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md transition"
   end
 
-  defp maybe_disabled(opts) do
-    case Map.get(opts, :disabled) do
-      true -> "bg-gray-200"
-      _ -> ""
-    end
+  defp maybe_disabled(class, %{disabled: true}) do
+    class <> " bg-gray-200"
   end
+
+  defp maybe_disabled(class, _), do: class
 end

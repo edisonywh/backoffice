@@ -7,22 +7,16 @@ defmodule Backoffice.Resolvers.Ecto do
 
   import Ecto.Query
 
-  # TODO: Review/Tidy up the API, what should they be named and in what position?
-
   def change(resolver_opts, action, %struct{} = resource, attrs \\ %{}) do
     changeset = Keyword.get(resolver_opts, :changeset)[action]
 
+    types = struct.__changeset__
+    attrs = cast_attrs(attrs, types)
+
     case changeset do
       nil ->
-        case function_exported?(struct, changeset, 2) do
-          true ->
-            struct
-            |> apply(:changeset, [resource, attrs])
-
-          _ ->
-            resource
-            |> Ecto.Changeset.change(atomize_keys(attrs))
-        end
+        struct
+        |> apply(:changeset, [resource, attrs])
 
       _ ->
         changeset.(resource, attrs)
@@ -75,23 +69,23 @@ defmodule Backoffice.Resolvers.Ecto do
     |> repo.get(id)
   end
 
-  defp atomize_keys(map) when is_map(map) do
-    for {k, v} <- map do
-      {String.to_existing_atom(k), maybe_cast(v)}
+  # Attrs comes from form submission, which are all string. We convert them back here.
+  defp cast_attrs(attrs, types) do
+    types = for {k, v} <- types, into: %{}, do: {to_string(k), v}
+
+    Enum.reduce(attrs, %{}, fn {k, v}, acc ->
+      Map.put(acc, k, cast_type(v, types[k]))
+    end)
+  end
+
+  defp cast_type(attr, :map) do
+    case Phoenix.json_library().decode(attr, keys: :atoms) do
+      {:error, _} -> attr
+      {:ok, value} -> value
     end
   end
 
-  # TODO: Refactor this to utilize the type declaration in `index_fields`/`form_fields`
-  defp maybe_cast(string) when string in ~w(true nil false) do
-    String.to_existing_atom(string)
-  end
-
-  defp maybe_cast(string) do
-    case Integer.parse(string) do
-      :error -> string
-      {value, ""} -> value
-    end
-  end
+  defp cast_type(attr, _type), do: attr
 
   # Filters
 
