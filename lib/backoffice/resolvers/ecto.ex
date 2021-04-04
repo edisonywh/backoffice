@@ -85,6 +85,12 @@ defmodule Backoffice.Resolvers.Ecto do
     end
   end
 
+  defp cast_type(attr, {:array, type}) do
+    attr
+    |> String.split(",")
+    |> Enum.map(&cast_type(String.trim(&1), type))
+  end
+
   defp cast_type(attr, _type), do: attr
 
   # Filters

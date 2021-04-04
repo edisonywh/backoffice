@@ -14,6 +14,19 @@ defmodule Backoffice.Field do
     text_input(form, field, build_opts(:integer, opts))
   end
 
+  defp do_form_field(form, field, {:array, _type}, opts) do
+    opts =
+      build_opts(
+        :string,
+        Map.merge(opts, %{
+          rows: 4,
+          value: Enum.join(input_value(form, field), ",")
+        })
+      )
+
+    text_input(form, field, opts)
+  end
+
   defp do_form_field(form, field, :textarea, opts) do
     opts =
       build_opts(
