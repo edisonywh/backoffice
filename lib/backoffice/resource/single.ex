@@ -10,6 +10,8 @@ defmodule Backoffice.Resource.Single do
       import Backoffice.DSL, only: [form: 1, form: 2]
 
       Module.register_attribute(__MODULE__, :form_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :resource, persist: true)
+      Module.put_attribute(__MODULE__, :resource, unquote(resource))
 
       form do
         schema = Backoffice.Resources.resolve_schema(unquote(resource))
@@ -80,7 +82,7 @@ defmodule Backoffice.Resource.Single do
       def render(assigns) do
         Phoenix.View.render(
           Backoffice.ResourceView,
-          "edit.html",
+          "single.html",
           assigns
         )
       end
@@ -111,6 +113,8 @@ defmodule Backoffice.Resource.Single do
 
         {:noreply, socket}
       end
+
+      def __resource__(), do: @resource
 
       defp apply_action(socket, :new, page_opts) do
         {_has_many, form_fields} = Backoffice.Resources.get_form_fields(__MODULE__, :new)

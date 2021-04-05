@@ -131,9 +131,11 @@ defmodule Backoffice.DSL do
   end
 
   def __belongs_to__(_env, mod, name, schema, opts) do
+    assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
+
     opts =
       opts
-      |> Keyword.merge(type: {:assoc, %Ecto.Association.BelongsTo{related: schema}})
+      |> Keyword.merge(type: {:assoc, assoc})
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
@@ -153,9 +155,11 @@ defmodule Backoffice.DSL do
   end
 
   def __has_one__(_env, mod, name, schema, opts) do
+    assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
+
     opts =
       opts
-      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{cardinality: :one, related: schema}})
+      |> Keyword.merge(type: {:assoc, assoc})
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})
@@ -175,9 +179,11 @@ defmodule Backoffice.DSL do
   end
 
   def __has_many__(_env, mod, name, schema, opts) do
+    assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
+
     opts =
       opts
-      |> Keyword.merge(type: {:assoc, %Ecto.Association.Has{cardinality: :many, related: schema}})
+      |> Keyword.merge(type: {:assoc, assoc})
       |> Enum.into(%{})
 
     Module.put_attribute(mod, :index_fields, {name, Macro.escape(opts)})

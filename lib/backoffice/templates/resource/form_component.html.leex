@@ -6,7 +6,7 @@
   class: "p-8 bg-gray-50 rounded-lg shadow",
   as: "resource" %>
   <%= for {field, opts} <- @form_fields do %>
-    <div class="mt-6 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+    <div class="mb-6 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
       <%= label f, field, Backoffice.ResourceView.column_name({field, opts}), class: "block text-sm font-medium leading-5 text-gray-700" %>
       <%= Backoffice.ResourceView.form_field f, field, opts %>
       <%= error_tag f, field %>

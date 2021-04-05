@@ -2,6 +2,7 @@ defmodule Backoffice.Field do
   use Phoenix.HTML
 
   import Phoenix.LiveView.Helpers
+  import Backoffice.ErrorHelper
 
   def form_field(form, field, opts) do
     type = Map.fetch!(opts, :type)
@@ -15,12 +16,20 @@ defmodule Backoffice.Field do
   end
 
   defp do_form_field(form, field, {:array, _type}, opts) do
+    opts = Enum.into(opts, %{})
+
+    value =
+      case input_value(form, field) do
+        "" -> ""
+        list when is_list(list) -> Enum.join(list, ",")
+      end
+
     opts =
       build_opts(
         :string,
         Map.merge(opts, %{
           rows: 4,
-          value: Enum.join(input_value(form, field), ",")
+          value: value
         })
       )
 
@@ -38,6 +47,29 @@ defmodule Backoffice.Field do
       )
 
     textarea(form, field, opts)
+  end
+
+  defp do_form_field(form, field, {:parameterized, Ecto.Embedded, %{related: schema}}, _opts) do
+    inputs_for(form, field, fn fp ->
+      fields =
+        for {k, v} <- schema.__changeset__() do
+          {k, %{type: v}}
+        end
+
+      [
+        {:safe, "<div class=\"p-4 shadow rounded-md\">"},
+        Enum.map(fields, fn {field, %{type: type}} ->
+          [
+            {:safe, "<div class=\"mb-4\">"},
+            label(fp, field, build_opts(:label, %{})),
+            do_form_field(fp, field, type, build_opts(type, %{})),
+            error_tag(fp, field),
+            {:safe, "</div>"}
+          ]
+        end),
+        {:safe, "</div>"}
+      ]
+    end)
   end
 
   defp do_form_field(form, field, {:parameterized, Ecto.Enum, %{values: values}} = type, opts) do
@@ -78,8 +110,11 @@ defmodule Backoffice.Field do
         {:safe, "<div class=\"p-2\">"},
         Enum.map(fields, fn {field, %{type: type}} ->
           [
+            {:safe, "<div class=\"mb-4\">"},
             label(fp, field, build_opts(:label, opts)),
-            do_form_field(fp, field, type, build_opts(type, opts))
+            do_form_field(fp, field, type, build_opts(type, opts)),
+            error_tag(fp, field),
+            {:safe, "</div>"}
           ]
         end),
         {:safe, "</div>"}
@@ -87,7 +122,7 @@ defmodule Backoffice.Field do
     end)
   end
 
-  defp do_form_field(form, field, {:assoc, %{cardinality: :many, related: schema}}, opts) do
+  defp do_form_field(form, field, {:assoc, %{cardinality: :many, related: schema}}, _opts) do
     inputs_for(form, field, fn fp ->
       fields = schema.__schema__(:fields)
       types = Enum.map(fields, &schema.__schema__(:type, &1))
@@ -125,23 +160,37 @@ defmodule Backoffice.Field do
     end)
   end
 
-  defp do_form_field(form, field, {:assoc, %{related: schema}}, opts) do
+  defp do_form_field(form, field, {:assoc, %{related: schema, related_key: key}}, opts) do
     inputs_for(form, field, fn fp ->
       fields = schema.__schema__(:fields)
       types = Enum.map(fields, &schema.__schema__(:type, &1))
 
       fields =
-        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
+        for {k, v} <- Enum.zip(fields, types) do
           {k, %{type: v}}
         end
 
+      primary_key = schema.__schema__(:primary_key)
+
       [
-        {:safe, "<div class=\"p-2\">"},
+        {:safe, "<div class=\"p-6 col-span-2 bg-gray-100 shadow-inner rounded-md\">"},
         Enum.map(fields, fn {field, %{type: type}} ->
-          [
-            label(fp, field, build_opts(:label, opts)),
-            do_form_field(fp, field, type, build_opts(type, opts))
-          ]
+          if field == key do
+            hidden_input(fp, field, value: form.data.id)
+          else
+            opts =
+              if field in primary_key,
+                do: Map.put(opts, :disabled, true),
+                else: opts
+
+            [
+              {:safe, "<div class=\"mb-4\">"},
+              label(fp, field, build_opts(:label, opts)),
+              do_form_field(fp, field, type, build_opts(type, opts)),
+              error_tag(fp, field),
+              {:safe, "</div>"}
+            ]
+          end
         end),
         {:safe, "</div>"}
       ]
@@ -150,6 +199,14 @@ defmodule Backoffice.Field do
 
   defp do_form_field(form, field, type, opts) do
     text_input(form, field, build_opts(type, opts))
+  end
+
+  defp build_opts(:label, opts) do
+    opts = Enum.into(opts, %{})
+
+    %{class: default_style(:label)}
+    |> Map.merge(opts)
+    |> Enum.into([])
   end
 
   defp build_opts(type, opts) do

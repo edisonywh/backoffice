@@ -7,15 +7,15 @@ defmodule Backoffice.Resolvers.Ecto do
 
   import Ecto.Query
 
-  def change(resolver_opts, action, %struct{} = resource, attrs \\ %{}) do
+  def change(resolver_opts, action, %schema{} = resource, attrs \\ %{}) do
     changeset = Keyword.get(resolver_opts, :changeset)[action]
 
-    types = struct.__changeset__
+    types = schema.__changeset__
     attrs = cast_attrs(attrs, types)
 
     case changeset do
       nil ->
-        struct
+        schema
         |> apply(:changeset, [resource, attrs])
 
       _ ->
@@ -78,7 +78,17 @@ defmodule Backoffice.Resolvers.Ecto do
     end)
   end
 
-  defp cast_type(attr, :map) do
+  defp cast_type(attrs, {:assoc, %{related: schema}}) do
+    types = schema.__changeset__
+
+    cast_attrs(attrs, types)
+  end
+
+  defp cast_type(attr, {:embed, _}) do
+    cast_type(attr, :map)
+  end
+
+  defp cast_type(attr, :map) when is_binary(attr) do
     case Phoenix.json_library().decode(attr, keys: :atoms) do
       {:error, _} -> attr
       {:ok, value} -> value

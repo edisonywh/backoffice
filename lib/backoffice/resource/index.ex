@@ -11,6 +11,8 @@ defmodule Backoffice.Resource.Index do
 
       Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :actions, accumulate: true)
+      Module.register_attribute(__MODULE__, :resource, persist: true)
+      Module.put_attribute(__MODULE__, :resource, unquote(resource))
 
       index do
         schema = Backoffice.Resources.resolve_schema(unquote(resource))
@@ -130,6 +132,14 @@ defmodule Backoffice.Resource.Index do
          )}
       end
 
+      def default_create(socket, id) do
+        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, %{}))
+      end
+
+      def default_edit(socket, id) do
+        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))
+      end
+
       defp apply_action(socket, _, page_opts) do
         socket
         |> assign(
@@ -150,14 +160,6 @@ defmodule Backoffice.Resource.Index do
           )
         )
         |> assign(:widgets, __MODULE__.widgets(socket))
-      end
-
-      def default_create(socket, id) do
-        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, %{}))
-      end
-
-      def default_edit(socket, id) do
-        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))
       end
 
       defoverridable(
