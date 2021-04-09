@@ -128,11 +128,11 @@ config :backoffice, layout: YourAppWeb.Backoffice.Layout
 # lib/your_app_web/live/backoffice/users/index.ex
 defmodule YourAppWeb.Backoffice.UserLive.Index do
   use Backoffice.Resource.Index,
-    resolver:
-      {Backoffice.Resolvers.Ecto,
-       repo: YourApp.Repo,
-       changeset: %{edit: &YourApp.Accounts.User.update_changeset/2},
-       preload: [:mailbox, :notification_preference]},
+    resolver: Backoffice.Resolvers.Ecto,
+    resolver_opts: [
+      repo: YourApp.Repo,
+      preload: [:mailbox, :notification_preference]
+    ],
     resource: YourApp.Accounts.User
 
   actions do
@@ -161,11 +161,12 @@ end
 defmodule YourAppWeb.Backoffice.UserLive.Single do
   # We name it single because it handles both :new and :edit.
   use Backoffice.Resource.Single,
-    resolver:
-      {Backoffice.Resolvers.Ecto,
-       repo: YourApp.Repo,
-       changeset: %{edit: &YourApp.Accounts.User.update_changeset/2},
-       preload: [:mailbox, :notification_preference]},
+    resolver: Backoffice.Resolvers.Ecto,
+    resolver_opts: [
+      repo: YourApp.Repo,
+      changeset: %{edit: &YourApp.Accounts.User.update_changeset/2},
+      preload: [:mailbox, :notification_preference]
+    ],
     resource: YourApp.Accounts.User
 
   form do # default for both
