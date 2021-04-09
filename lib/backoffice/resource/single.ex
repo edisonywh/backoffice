@@ -1,6 +1,7 @@
 defmodule Backoffice.Resource.Single do
   defmacro __using__(opts) do
-    {resolver, resolver_opts} = Keyword.fetch!(opts, :resolver)
+    resolver = Keyword.fetch!(opts, :resolver)
+    resolver_opts = Keyword.get(opts, :resolver_opts, [])
     resource = Keyword.fetch!(opts, :resource)
     live_opts = Keyword.get(opts, :live_opts, [])
 
