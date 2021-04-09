@@ -7,22 +7,16 @@ defmodule Backoffice.Resolvers.Ecto do
 
   import Ecto.Query
 
-  # TODO: Review/Tidy up the API, what should they be named and in what position?
-
-  def change(resolver_opts, action, %struct{} = resource, attrs \\ %{}) do
+  def change(resolver_opts, action, %schema{} = resource, attrs \\ %{}) do
     changeset = Keyword.get(resolver_opts, :changeset)[action]
+
+    types = schema.__changeset__
+    attrs = cast_attrs(attrs, types)
 
     case changeset do
       nil ->
-        case function_exported?(struct, changeset, 2) do
-          true ->
-            struct
-            |> apply(:changeset, [resource, attrs])
-
-          _ ->
-            resource
-            |> Ecto.Changeset.change(atomize_keys(attrs))
-        end
+        schema
+        |> apply(:changeset, [resource, attrs])
 
       _ ->
         changeset.(resource, attrs)
@@ -68,30 +62,53 @@ defmodule Backoffice.Resolvers.Ecto do
     repo = Keyword.fetch!(resolver_opts, :repo)
     preloads = Keyword.get(resolver_opts, :preload, [])
 
-    id = Map.get(page_opts, "id")
+    case Map.get(page_opts, "id") do
+      # If there's no ID, we assume it's a `:new` action.
+      nil ->
+        resource
+        |> struct!()
+        |> repo.preload(preloads)
 
-    resource
-    |> preload([q], ^preloads)
-    |> repo.get(id)
-  end
-
-  defp atomize_keys(map) when is_map(map) do
-    for {k, v} <- map do
-      {String.to_existing_atom(k), maybe_cast(v)}
+      id ->
+        resource
+        |> preload([q], ^preloads)
+        |> repo.get(id)
     end
   end
 
-  # TODO: Refactor this to utilize the type declaration in `index_fields`/`form_fields`
-  defp maybe_cast(string) when string in ~w(true nil false) do
-    String.to_existing_atom(string)
+  # Attrs comes from form submission, which are all string. We convert them back here.
+  defp cast_attrs(attrs, types) do
+    types = for {k, v} <- types, into: %{}, do: {to_string(k), v}
+
+    Enum.reduce(attrs, %{}, fn {k, v}, acc ->
+      Map.put(acc, k, cast_type(v, types[k]))
+    end)
   end
 
-  defp maybe_cast(string) do
-    case Integer.parse(string) do
-      :error -> string
-      {value, ""} -> value
+  defp cast_type(attrs, {:assoc, %{related: schema}}) do
+    types = schema.__changeset__
+
+    cast_attrs(attrs, types)
+  end
+
+  defp cast_type(attr, {:embed, _}) do
+    cast_type(attr, :map)
+  end
+
+  defp cast_type(attr, :map) when is_binary(attr) do
+    case Phoenix.json_library().decode(attr, keys: :atoms) do
+      {:error, _} -> attr
+      {:ok, value} -> value
     end
   end
+
+  defp cast_type(attr, {:array, type}) do
+    attr
+    |> String.split(",")
+    |> Enum.map(&cast_type(String.trim(&1), type))
+  end
+
+  defp cast_type(attr, _type), do: attr
 
   # Filters
 

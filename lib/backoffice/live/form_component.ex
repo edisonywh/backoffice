@@ -1,8 +1,14 @@
 defmodule Backoffice.FormComponent do
   use Phoenix.LiveComponent
-  use Phoenix.HTML
 
-  import Backoffice.ErrorHelper
+  @impl true
+  def render(assigns) do
+    Phoenix.View.render(
+      Backoffice.ResourceView,
+      "form_component.html",
+      assigns
+    )
+  end
 
   @impl true
   def update(%{resource: resource, resolver: {resolver, opts}, action: action} = assigns, socket) do
@@ -59,6 +65,9 @@ defmodule Backoffice.FormComponent do
          |> push_redirect(to: socket.assigns.return_to)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        require Logger
+        Logger.warn("Failed to save, #{inspect(changeset)}")
+
         {:noreply, assign(socket, changeset: changeset)}
     end
   end
