@@ -51,8 +51,8 @@ scope "/admin", YourAppWeb, do
   live("/users", UserLive.Index, :index) # these are your existing pages
   live("/users/:id/edit", UserLive.Index, :edit)
 
-  live("/newsletters", Backoffice.NewsletterLive.Index, :index, layout: {Backoffice.LayoutView, :backoffice})
-  live("/newsletters/:id/edit", Backoffice.NewsletterLive.Index, :edit, layout: {Backoffice.LayoutView, :backoffice})
+  live("/newsletters", Backoffice.NewsletterLive.Index, layout: {Backoffice.LayoutView, :backoffice})
+  live("/newsletters/:id/edit", Backoffice.NewsletterLive.Single, layout: {Backoffice.LayoutView, :backoffice})
 end
 ```
 
@@ -71,7 +71,7 @@ But, as you might have noticed, this means you need to create a lot more modules
 # Icons are all from heroicons.com.
 defmodule YourAppWeb.Backoffice.Layout do
   @behaviour Backoffice.Layout
-  
+
   alias YourAppWeb.Routes.Helpers, as: Routes
 
   def stylesheets do
@@ -125,9 +125,9 @@ config :backoffice, layout: YourAppWeb.Backoffice.Layout
 3. Create a resource module:
 
 ```elixir
-# lib/your_app_web/live/backoffice/user.ex
+# lib/your_app_web/live/backoffice/users/index.ex
 defmodule YourAppWeb.Backoffice.UserLive.Index do
-  use Backoffice.Resources,
+  use Backoffice.Resource.Index,
     resolver:
       {Backoffice.Resolvers.Ecto,
        repo: YourApp.Repo,
@@ -147,7 +147,7 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
 
   # Right now second argument to create is nil, but we might pass down list of ids down the road.
   def create(socket, nil) do
-    push_patch(socket, to: YourApp.Router.Helpers.user_index_live(socket, :new, []))
+    push_patch(socket, to: YourApp.Router.Helpers.live_path(socket, YourAppWeb.Backoffice.UserLive.Single, []))
   end
 
   index do
@@ -155,6 +155,18 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
     field :verified, :boolean
     field :age, :string, render: &__MODULE__.field/1 # 1-arity only, takes the resource itself
   end
+end
+
+# lib/your_app_web/live/backoffice/users/single.ex
+defmodule YourAppWeb.Backoffice.UserLive.Single do
+  # We name it single because it handles both :new and :edit.
+  use Backoffice.Resource.Single,
+    resolver:
+      {Backoffice.Resolvers.Ecto,
+       repo: YourApp.Repo,
+       changeset: %{edit: &YourApp.Accounts.User.update_changeset/2},
+       preload: [:mailbox, :notification_preference]},
+    resource: YourApp.Accounts.User
 
   form do # default for both
     field :verified, :boolean
@@ -176,10 +188,8 @@ end
 
 ```elixir
 scope "/admin", YourAppWeb, do
-  live("/users", Backoffice.UserLive.Index, :index, layout: {Backoffice.LayoutView, :backoffice})
-  live("/users/:id/edit", Backoffice.UserLive.Index, :edit,
-      layout: {Backoffice.LayoutView, :backoffice}
-    )
+  live("/users", Backoffice.UserLive.Index, layout: {Backoffice.LayoutView, :backoffice})
+  live("/users/:id/edit", Backoffice.UserLive.Single, layout: {Backoffice.LayoutView, :backoffice})
 end
 ```
 
@@ -308,15 +318,14 @@ end
 
 ## Can I use Backoffice in production?
 
-You sure can, but I would not really advise it. Although it's in active development now, Backoffice is still very early stage (Backoffice isn't even on Hex yet), so it's subject to a lot of API changes. **Expect changes without notice in this early stage.**
+You sure can, but I would not really advise it. Backoffice is pre-release and in active development now, so it's bound to have a lot of breaking API changes. Use at your own risk.
 
 For what it's worth, I am dogfooding it in production with [Slick Inbox](https://slickinbox.com).
 
 There are quite a number of issues right now:
 
-- [ ] Editing :map doesn't work
-- [ ] Index & Form fields default might not be the best (form fields right now attempts to show assocs, but you need to explicitly preload it and you can't edit them yet.)
-- [ ] Association support is not great
+- [ ] Index & Form fields default might not be the best (form fields right now attempts to show assocs, but you need to explicitly preload it and you can't really edit them yet.)
+- [ ] Association support is not great (it kinda works, but needs more testing/documentation)
 - [ ] etc...
 
 But, I encourage you to try it out anyway and contribute, and together we can make Backoffice great :)
@@ -328,7 +337,8 @@ Honestly I'd really love for the community to contribute more, as I've mentioned
 Other than that, here are some things I hope to improve:
 
 - [ ] Better support for associations?
-- [ ] Custom color?
+- [ ] Custom color/theme
+- [ ] Better animations
 - [ ] Datepicker support
 - [ ] LiveComponent support (It is possible now, but I want to refine the API)
 - [ ] Implement a test suite..

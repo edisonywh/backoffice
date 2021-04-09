@@ -122,45 +122,39 @@ defmodule Backoffice.Field do
     end)
   end
 
-  defp do_form_field(form, field, {:assoc, %{cardinality: :many, related: schema}}, _opts) do
-    inputs_for(form, field, fn fp ->
-      fields = schema.__schema__(:fields)
-      types = Enum.map(fields, &schema.__schema__(:type, &1))
+  # TODO: Improve the rendering of `belongs_to.
+  #   For example it would be good to render a link to the resource
+  #   this means we likely have to:
+  #     - require user to implement Backoffice for the target resource
+  #     - find a way to get the target resource's attributes with just a `schema`/`resource` field.
+  #   once we have that, we can think about how to link to that resource directly.
+  defp do_form_field(
+         form,
+         field,
+         {:assoc, %Ecto.Association.BelongsTo{related: _schema, related_key: _key}},
+         opts
+       ) do
+    resource = input_value(form, field)
 
-      fields =
-        for {k, v} <- Enum.zip(fields, types), not is_tuple(v) do
-          {k, %{type: v}}
-        end
+    cond do
+      render = Map.get(opts, :render) ->
+        render.(resource)
 
-      [
-        {:safe, "<thead>"},
-        {:safe, "<tr>"},
-        Enum.map(fields, fn {field, %{type: _type}} ->
-          [
-            {:safe, "<td class=\"px-6 py-4 whitespace\">"},
-            {:safe, Backoffice.ResourceView.column_name({field, %{}})},
-            {:safe, "</td>"}
-          ]
-        end),
-        {:safe, "</tr>"},
-        {:safe, "</thead>"},
-        {:safe, "<tbody class=\"bg-white\">"},
-        {:safe, "<tr class=\"border-b border-gray-200\""},
-        Enum.map(fields, fn {field, %{type: _type}} ->
-          [
-            {:safe, "<td class=\"px-6 py-4 whitespace\">"},
-            {:safe, Backoffice.ResourceView.column_value(fp.data, {field, %{}})},
-            {:safe, "</td>"}
-          ]
-        end),
-        {:safe, "</tr>"},
-        {:safe, "</tbody>"}
-      ]
-      |> List.flatten()
-    end)
+      key = Map.get(opts, :display, :id) ->
+        text_input(
+          form,
+          field,
+          build_opts(:default, value: resource[key], disabled: true)
+        )
+    end
   end
 
-  defp do_form_field(form, field, {:assoc, %{related: schema, related_key: key}}, opts) do
+  defp do_form_field(
+         form,
+         field,
+         {:assoc, %Ecto.Association.Has{related: schema, related_key: key}},
+         opts
+       ) do
     inputs_for(form, field, fn fp ->
       fields = schema.__schema__(:fields)
       types = Enum.map(fields, &schema.__schema__(:type, &1))

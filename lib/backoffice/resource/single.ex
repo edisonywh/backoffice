@@ -122,7 +122,10 @@ defmodule Backoffice.Resource.Single do
         socket
         |> assign(:form_fields, form_fields)
         |> assign(:has_many, [])
-        |> assign(:resource, %unquote(resource){})
+        |> assign(
+          :resource,
+          unquote(resolver).get(unquote(resource), unquote(resolver_opts), %{})
+        )
       end
 
       defp apply_action(socket, :edit, page_opts) do

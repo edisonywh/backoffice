@@ -62,11 +62,18 @@ defmodule Backoffice.Resolvers.Ecto do
     repo = Keyword.fetch!(resolver_opts, :repo)
     preloads = Keyword.get(resolver_opts, :preload, [])
 
-    id = Map.get(page_opts, "id")
+    case Map.get(page_opts, "id") do
+      # If there's no ID, we assume it's a `:new` action.
+      nil ->
+        resource
+        |> struct!()
+        |> repo.preload(preloads)
 
-    resource
-    |> preload([q], ^preloads)
-    |> repo.get(id)
+      id ->
+        resource
+        |> preload([q], ^preloads)
+        |> repo.get(id)
+    end
   end
 
   # Attrs comes from form submission, which are all string. We convert them back here.

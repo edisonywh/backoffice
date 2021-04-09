@@ -22,7 +22,7 @@
 
 <%= if not Enum.empty?(@has_many) do %>
   <%= for {assoc, _opts} <- @has_many do %>
-    <% if not Enum.empty?(Map.get(@resource, assoc)) do %>
+    <%= if not Enum.empty?(Map.get(@resource, assoc)) do %>
       <h2 class="mt-12 mb-4 text-lg leading-6 font-medium text-gray-900"><%= Phoenix.Naming.humanize(assoc) %></h2>
       <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">

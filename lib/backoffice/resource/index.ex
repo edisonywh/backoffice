@@ -30,6 +30,8 @@ defmodule Backoffice.Resource.Index do
         action(:edit, type: :single, handler: &__MODULE__.default_edit/2)
       end
 
+      def __resource__(), do: @resource
+
       def widgets(socket) do
         [
           %Backoffice.PlainWidget{
@@ -88,7 +90,7 @@ defmodule Backoffice.Resource.Index do
         {:noreply, socket}
       end
 
-      def handle_event("sort", %{"field" => field}, socket) do
+      def handle_event("bo-sort", %{"field" => field}, socket) do
         order = Backoffice.Resources.apply_order(socket.assigns.params["order_by"], field)
 
         params =
