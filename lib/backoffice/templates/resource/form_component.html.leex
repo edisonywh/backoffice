@@ -3,6 +3,8 @@
   phx_target: @myself,
   phx_change: "validate",
   phx_submit: "save",
+  phx_hook: "BeforeUnload",
+  data: [changed: !Enum.empty?(@changeset.changes)],
   class: "p-8 bg-gray-50 rounded-lg shadow",
   as: "resource" %>
   <%= for {field, opts} <- @form_fields do %>
