@@ -145,8 +145,9 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
     socket
   end
 
-  # Right now second argument to create is nil, but we might pass down list of ids down the road.
-  def create(socket, nil) do
+  def create(socket, ids) do
+    ids = Enum.map(&(String.to_integer/1))
+
     push_patch(socket, to: YourApp.Router.Helpers.live_path(socket, YourAppWeb.Backoffice.UserLive.Single, []))
   end
 

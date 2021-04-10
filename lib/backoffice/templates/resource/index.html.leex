@@ -7,7 +7,6 @@
           <button
             phx-click="bo-action"
             phx-value-action="<%= action %>"
-            phx-value-id=""
             phx-throttle="500"
             class="<%= get_class(opts) %>"
             <%= maybe_confirm(opts) %>>
@@ -36,6 +35,9 @@
       <table class="min-w-full table-fixed">
         <thead>
           <tr>
+            <th class="w-1/12 px-6 py-3 cursor-pointer border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+              <input type="checkbox" name="bo-select-all" id="bo-select-all" phx-click="bo-select-all" phx-update="ignore" class="focus:ring-indigo-500 h-4 w-4 mt-2 mb-4 text-indigo-600 border-gray-300 rounded transition duration-75"/>
+            </th>
             <%= for {field, _opts} = field_tuple <- @fields do %>
               <th
                 phx-click="bo-sort"
@@ -58,6 +60,9 @@
           <tbody class="bg-white">
             <%= for resource <- @resources.entries do %>
               <tr class="border-b border-gray-200">
+                <td class="px-6 py-4 whitespace">
+                  <input type="checkbox" name="selected" phx-click="bo-select" phx-value-bo-select-id="<%= resource.id %>" <%= maybe_checked(resource, @selected_ids) %> class="focus:ring-indigo-500 h-4 w-4 mt-2 mb-4 text-indigo-600 border-gray-300 rounded transition duration-75" />
+                </td>
                 <%= for field <- @fields do %>
                   <td class="px-6 py-4 whitespace">
                     <div class="text-sm leading-5 text-gray-900"><%= column_value(resource, field) %></div>
