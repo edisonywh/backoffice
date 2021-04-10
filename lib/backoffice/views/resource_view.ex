@@ -85,6 +85,15 @@ defmodule Backoffice.ResourceView do
   def maybe_confirm(%{confirm: false}), do: ""
   def maybe_confirm(%{confirm: msg}), do: {:safe, ["data-confirm=", "\"", msg, "\""]}
 
+  def maybe_checked(resource, ids) when is_list(ids) do
+    id = to_string(resource.id)
+
+    case id in ids do
+      true -> "checked"
+      false -> ""
+    end
+  end
+
   def live_modal(_socket, component, opts) do
     return_to = Keyword.fetch!(opts, :return_to)
     modal_opts = [id: :modal, return_to: return_to, component: component, opts: opts]

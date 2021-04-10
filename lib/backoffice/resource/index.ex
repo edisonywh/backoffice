@@ -70,6 +70,7 @@ defmodule Backoffice.Resource.Index do
           )
           |> assign(:resources, resources)
           |> assign(:total_entries, resources.total_entries)
+          |> assign(:selected_ids, [])
 
         {:ok, socket}
       end
@@ -111,6 +112,41 @@ defmodule Backoffice.Resource.Index do
           |> __MODULE__.__action__()
 
         {:noreply, action.handler.(socket, id)}
+      end
+
+      def handle_event("bo-action", %{"action" => action}, socket) do
+        ids = socket.assigns.selected_ids
+
+        action =
+          action
+          |> String.to_existing_atom()
+          |> __MODULE__.__action__()
+
+        {:noreply, action.handler.(socket, ids)}
+      end
+
+      def handle_event("bo-select-all", %{"value" => "on"}, socket) do
+        # We need to `to_string` here otherwise Phoenix will serialize the list of integers to binaries.
+        ids = socket.assigns.resources.entries |> Enum.map(&to_string(&1.id))
+
+        {:noreply, assign(socket, :selected_ids, ids)}
+      end
+
+      def handle_event("bo-select-all", %{}, socket) do
+        {:noreply, assign(socket, :selected_ids, [])}
+      end
+
+      def handle_event("bo-select", %{"bo-select-id" => id}, socket) do
+        selected_ids = socket.assigns.selected_ids
+
+        selected_ids =
+          if id in selected_ids do
+            Enum.reject(selected_ids, &(&1 == id))
+          else
+            [id | selected_ids]
+          end
+
+        {:noreply, assign(socket, :selected_ids, selected_ids)}
       end
 
       def handle_info({:apply_filter, filter, value}, socket) do
