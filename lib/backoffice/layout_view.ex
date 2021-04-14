@@ -44,13 +44,16 @@ defmodule Backoffice.LayoutView do
       case Map.has_key?(link, :links) do
         true ->
           [
-            {:safe, ~s(<div x-data="{ expanded: #{Map.get(link, :expanded, false)} }">)},
+            {:safe, ~s(<span x-data="{ expanded: #{Map.get(link, :expanded, false)} }">)},
             {:safe,
              """
-               <p
+               <span
                 @click="expanded = !expanded"
                 class="#{active_link(conn.request_path, "")} ml-#{indent * 2} cursor-pointer flex justify-between">
-                #{link.label}
+                <span class="flex">
+                  #{render_icon(link[:icon])}
+                  #{link.label}
+                </span>
                 <template x-if="expanded">
                   <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -61,19 +64,21 @@ defmodule Backoffice.LayoutView do
                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                   </svg>
                 </template>
-               </p>
+               </span>
              """},
             {:safe, ~s(<span x-show="expanded">)},
             render_links(conn, link.links, indent + 1),
             {:safe, ~s(</span>)},
-            {:safe, ~s(</div>)}
+            {:safe, ~s(</span>)}
           ]
 
         false ->
           link to: link.link,
                class: ["ml-#{indent * 2} " | active_link(conn.request_path, link.link)] do
-            render_icon(link[:icon])
-            link.label
+            [
+              {:safe, render_icon(link[:icon])},
+              link.label
+            ]
           end
       end
     end
