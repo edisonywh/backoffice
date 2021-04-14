@@ -102,6 +102,20 @@ defmodule YourAppWeb.Backoffice.Layout do
         """
       },
       %{
+        label: "Nested Links",
+        expanded: true # default to false
+        links: [
+          %{
+            label: "Nested 1",
+            link: "#"
+          },
+          %{
+            label: "Nested 2",
+            link: "#"
+          }
+        ]
+      }
+      %{
         label: "LiveDashboard",
         link: "/admin/dashboard",
         icon: """
