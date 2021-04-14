@@ -85,12 +85,7 @@
                 <img src="<%= logo() %>" alt="Logo" />
               </div>
               <nav class="mt-5 px-2 space-y-1">
-                <%= for link <- links() do %>
-                  <%= link to: link.link, class: active_link(@conn.request_path, link.link) do %>
-                    <%= render_icon(link.icon) %>
-                    <%= link.label %>
-                  <% end %>
-                <% end %>
+                <%= render_links(@conn, links()) %>
               </nav>
             </div>
             <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
@@ -125,12 +120,7 @@
                 <img src="<%= logo() %>" alt="Logo" />
               </div>
               <nav class="mt-5 flex-1 px-2 bg-white space-y-1">
-                <%= for link <- links() do %>
-                  <%= link to: link.link, class: active_link(@conn.request_path, link.link) do %>
-                    <%= render_icon(link.icon) %>
-                    <%= link.label %>
-                  <% end %>
-                <% end %>
+                <%= render_links(@conn, links()) %>
               </nav>
             </div>
             <div class="flex-shrink-0 flex border-t border-gray-200 p-4">

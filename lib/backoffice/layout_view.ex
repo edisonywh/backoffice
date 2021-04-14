@@ -39,6 +39,46 @@ defmodule Backoffice.LayoutView do
     end
   end
 
+  def render_links(conn, links, indent \\ 1) do
+    for link <- links do
+      case Map.has_key?(link, :links) do
+        true ->
+          [
+            {:safe, ~s(<div x-data="{ expanded: #{Map.get(link, :expanded, false)} }">)},
+            {:safe,
+             """
+               <p
+                @click="expanded = !expanded"
+                class="#{active_link(conn.request_path, "")} ml-#{indent * 2} cursor-pointer flex justify-between">
+                #{link.label}
+                <template x-if="expanded">
+                  <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                  </svg>
+                </template>
+                <template x-if="!expanded">
+                  <svg class="h-5 w-5 mr-2 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </template>
+               </p>
+             """},
+            {:safe, ~s(<span x-show="expanded">)},
+            render_links(conn, link.links, indent + 1),
+            {:safe, ~s(</span>)},
+            {:safe, ~s(</div>)}
+          ]
+
+        false ->
+          link to: link.link,
+               class: ["ml-#{indent * 2} " | active_link(conn.request_path, link.link)] do
+            render_icon(link[:icon])
+            link.label
+          end
+      end
+    end
+  end
+
   def links do
     layout = Application.get_env(:backoffice, :layout)
 
@@ -58,23 +98,20 @@ defmodule Backoffice.LayoutView do
   end
 
   def active_link(path, path) do
-    {:safe,
-     "bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"}
+    "bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
   end
 
   def active_link(_, _) do
-    {:safe,
-     """
-     text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md
-     """}
+    "text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md "
   end
 
-  def render_icon(content) do
-    {:safe,
-     """
-     <div class="h-4 w-4 fill-current mr-3">
-       #{content}
-     </div>
-     """}
+  def render_icon(content) when not is_nil(content) do
+    """
+    <div class="h-4 w-4 fill-current mr-3">
+      #{content}
+    </div>
+    """
   end
+
+  def render_icon(_), do: ""
 end
