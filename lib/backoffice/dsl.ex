@@ -130,7 +130,7 @@ defmodule Backoffice.DSL do
     end
   end
 
-  def __belongs_to__(_env, mod, name, schema, opts) do
+  def __belongs_to__(_env, mod, name, _schema, opts) do
     assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
 
     opts =
@@ -154,7 +154,7 @@ defmodule Backoffice.DSL do
     end
   end
 
-  def __has_one__(_env, mod, name, schema, opts) do
+  def __has_one__(_env, mod, name, _schema, opts) do
     assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
 
     opts =
@@ -178,7 +178,7 @@ defmodule Backoffice.DSL do
     end
   end
 
-  def __has_many__(_env, mod, name, schema, opts) do
+  def __has_many__(_env, mod, name, _schema, opts) do
     assoc = Module.get_attribute(mod, :resource).__schema__(:association, name)
 
     opts =
