@@ -94,12 +94,6 @@ defmodule Backoffice.ResourceView do
     end
   end
 
-  def live_modal(_socket, component, opts) do
-    return_to = Keyword.fetch!(opts, :return_to)
-    modal_opts = [id: :modal, return_to: return_to, component: component, opts: opts]
-    live_component(socket, Backoffice.ModalComponent, modal_opts)
-  end
-
   def page_nav(socket, %{page: page}, params, route) do
     previous_params = Map.put(params, :page, page.page_number - 1)
     next_params = Map.put(params, :page, page.page_number + 1)

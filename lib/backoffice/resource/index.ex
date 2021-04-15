@@ -9,6 +9,8 @@ defmodule Backoffice.Resource.Index do
       use Phoenix.LiveView, unquote(live_opts)
 
       import Backoffice.DSL
+      import Backoffice.LiveView.Helpers
+      import Phoenix.LiveView.Helpers
 
       Module.register_attribute(__MODULE__, :index_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :actions, accumulate: true)
@@ -51,6 +53,10 @@ defmodule Backoffice.Resource.Index do
       end
 
       def mount(params, session, socket) do
+        do_mount(params, session, socket)
+      end
+
+      def do_mount(params, session, socket) do
         resources = unquote(resolver).load(unquote(resource), unquote(resolver_opts), %{})
 
         {single, page} = Backoffice.Resources.get_actions(__MODULE__, socket)
@@ -92,6 +98,12 @@ defmodule Backoffice.Resource.Index do
         {:noreply, socket}
       end
 
+      # FIXME: Because `push_event` doesn't work with `push_redirect`, we implement a workaround to allow
+      # client-side to initiate redirect.
+      def handle_event("redirect", url, socket) do
+        {:noreply, push_redirect(socket, to: url)}
+      end
+
       def handle_event("bo-sort", %{"field" => field}, socket) do
         order = Backoffice.Resources.apply_order(socket.assigns.params["order_by"], field)
 
@@ -111,7 +123,7 @@ defmodule Backoffice.Resource.Index do
           |> String.to_existing_atom()
           |> __MODULE__.__action__()
 
-        {:noreply, action.handler.(socket, id)}
+        action.handler.(socket, id)
       end
 
       def handle_event("bo-action", %{"action" => action}, socket) do
@@ -122,7 +134,7 @@ defmodule Backoffice.Resource.Index do
           |> String.to_existing_atom()
           |> __MODULE__.__action__()
 
-        {:noreply, action.handler.(socket, ids)}
+        action.handler.(socket, ids)
       end
 
       def handle_event("bo-select-all", %{"value" => "on"}, socket) do
@@ -172,11 +184,13 @@ defmodule Backoffice.Resource.Index do
       end
 
       def default_create(socket, id) do
-        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, %{}))
+        {:noreply,
+         push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, %{}))}
       end
 
       def default_edit(socket, id) do
-        push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))
+        {:noreply,
+         push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))}
       end
 
       defp apply_action(socket, _, page_opts) do
@@ -205,7 +219,8 @@ defmodule Backoffice.Resource.Index do
         __index__: 0,
         __actions__: 0,
         __action__: 1,
-        widgets: 1
+        widgets: 1,
+        mount: 3
       )
     end
   end

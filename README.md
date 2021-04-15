@@ -156,13 +156,13 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
 
   def retry(socket, resource_id) do
     ...
-    socket
+    {:noreply, socket}
   end
 
   def create(socket, ids) do
     ids = Enum.map(&(String.to_integer/1))
 
-    push_patch(socket, to: YourApp.Router.Helpers.live_path(socket, YourAppWeb.Backoffice.UserLive.Single, []))
+    {:noreply, push_patch(socket, to: YourApp.Router.Helpers.live_path(socket, YourAppWeb.Backoffice.UserLive.Single, []))}
   end
 
   index do
@@ -323,14 +323,53 @@ end
 
 def retry(socket, resource_id) do
   ...
-  socket
+  {:noreply, socket}
 end
 
 # Right now second argument to create is nil, but we might pass down list of ids down the road.
 def create(socket, nil) do
-  push_patch(socket, to: YourApp.Router.Helpers.user_index_live(socket, :new, []))
+  {:noreply, push_patch(socket, to: YourApp.Router.Helpers.user_index_live(socket, :new, []))}
 end
 ```
+
+## Notifications
+
+Backoffice has a neat little notification pop-up, you can also use it in your custom actions, or anyway you like.
+
+For example,
+
+```elixir
+actions do
+  action :notify, type: :single, handler: &__MODULE__.notify/2
+end
+def notify(socket, id) do
+  # `push_notification/2` is an API provided by `Backoffice.LiveView.Helpers`.
+  {:noreply, push_notification(socket, title: "Editing #{id}", subtitle: "Subtitle")}
+end
+```
+
+You can decide to show the notification pop-up when the resource is successfully updated for example, or you could use it on your Dashboard and hook it up to PubSub (maybe to monitor every purchase!), like so:
+
+```elixir
+# lib/your_app_web/live/backoffice/users/index.ex
+defmodule YourAppWeb.Backoffice.UserLive.Index do
+...
+  def mount(params, session, socket) do
+    if connected?(socket), do: Phoenix.PubSub.subscribe(My.PubSub, "info")
+    do_mount(params, session, socket) # `do_mount` is needed for backoffice to function.
+  end
+  def handle_info({:info, text}, socket) do
+    {:noreply, push_notification(socket, level: :info, title: "PubSub", subtitle: text)}
+  end
+...
+end
+```
+
+There's three level of notifications available right now, `:info`, `:success` and `:error`. E.g: `push_notification(socket, level: :error)`. Defaults to `:info`.
+
+If you want to use notification in your custom page, there are two things you need. Refer to `Backoffice.LiveView.Helpers.push_notification/2` for more information.
+
+There's also a slight caveat, you can't use `push_redirect` with `push_notification`, because [`push_redirect` doesn't work with `push_event`](https://github.com/phoenixframework/phoenix_live_view/blob/v0.15.4/lib/phoenix_live_view/utils.ex#L208-L214) (which is what `push_notification` uses under the hood). For that reason, Backoffice provides a callback so you can still do redirection, just do `push_notification(socket, redirect: url)`.
 
 ## Can I use Backoffice in production?
 
