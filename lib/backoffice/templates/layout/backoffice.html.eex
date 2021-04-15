@@ -203,7 +203,7 @@
               <div class="p-4">
                 <div class="flex items-start">
                   <div class="flex-shrink-0">
-                    <span x-show="level === 'info'">
+                    <template x-if="level === 'info'">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="h-6 w-6 text-blue-400"
@@ -218,8 +218,8 @@
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                    </span>
-                    <span x-show="level === 'success'">
+                    </template>
+                    <template x-if="level === 'success'">
                       <svg
                         class="h-6 w-6 text-green-400"
                         xmlns="http://www.w3.org/2000/svg"
@@ -235,8 +235,8 @@
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                    </span>
-                    <span x-show="level === 'error'">
+                    </template>
+                    <template x-if="level === 'error'">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="h-6 w-6 text-red-400"
@@ -251,7 +251,7 @@
                           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                    </span>
+                    </template>
                   </div>
                   <div class="ml-3 w-0 flex-1 pt-0.5">
                     <p x-text="title" class="text-sm font-medium text-gray-900"></p>
