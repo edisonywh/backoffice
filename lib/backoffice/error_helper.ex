@@ -1,6 +1,12 @@
 defmodule Backoffice.ErrorHelper do
   use Phoenix.HTML
 
+  def traverse_errors(changeset) do
+    changeset
+    |> Ecto.Changeset.traverse_errors(&translate_error/1)
+    |> format_errors()
+  end
+
   def error_tag(form, field) do
     form.errors
     |> Keyword.get_values(field)
@@ -16,10 +22,15 @@ defmodule Backoffice.ErrorHelper do
     Enum.reduce(opts, msg, fn {key, value}, msg ->
       token = "%{#{key}}"
 
-      case String.contains?(msg, token) do
-        true -> String.replace(msg, token, to_string(value), global: false)
-        false -> msg
-      end
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
     end)
+  end
+
+  defp format_errors(errors) do
+    errors
+    |> Enum.map(fn {k, v} -> "#{k}: #{v}" end)
+    |> Enum.join(", ")
   end
 end

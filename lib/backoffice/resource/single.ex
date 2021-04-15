@@ -9,6 +9,8 @@ defmodule Backoffice.Resource.Single do
       use Phoenix.LiveView, unquote(live_opts)
 
       import Backoffice.DSL, only: [form: 1, form: 2]
+      import Backoffice.LiveView.Helpers
+      import Phoenix.LiveView.Helpers
 
       Module.register_attribute(__MODULE__, :form_fields, accumulate: true)
       Module.register_attribute(__MODULE__, :resource, persist: true)
@@ -22,7 +24,11 @@ defmodule Backoffice.Resource.Single do
         end
       end
 
-      def mount(%{"id" => id} = params, session, socket) do
+      def mount(params, session, socket) do
+        do_mount(params, session, socket)
+      end
+
+      def do_mount(%{"id" => id} = params, session, socket) do
         resource = unquote(resolver).get(unquote(resource), unquote(resolver_opts), params)
 
         has_many_keys =
@@ -54,7 +60,7 @@ defmodule Backoffice.Resource.Single do
         {:ok, socket}
       end
 
-      def mount(_params, session, socket) do
+      def do_mount(_params, session, socket) do
         {_, form_fields} = Backoffice.Resources.get_form_fields(__MODULE__, nil)
 
         socket =
@@ -106,6 +112,12 @@ defmodule Backoffice.Resource.Single do
         {:noreply, socket}
       end
 
+      # FIXME: Because `push_event` doesn't work with `push_redirect`, we implement a workaround to allow
+      # client-side to initiate redirect.
+      def handle_event("redirect", url, socket) do
+        {:noreply, push_redirect(socket, to: url)}
+      end
+
       def handle_info({field, value}, socket) do
         send_update(Backoffice.FormComponent, [
           {:id, socket.assigns.resource.id || :new},
@@ -142,7 +154,7 @@ defmodule Backoffice.Resource.Single do
         )
       end
 
-      defoverridable(__form__: 0)
+      defoverridable(__form__: 0, mount: 3)
     end
   end
 end

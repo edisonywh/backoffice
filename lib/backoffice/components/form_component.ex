@@ -1,6 +1,8 @@
 defmodule Backoffice.FormComponent do
   use Phoenix.LiveComponent
 
+  import Backoffice.LiveView.Helpers
+
   @impl true
   def render(assigns) do
     Phoenix.View.render(
@@ -58,15 +60,25 @@ defmodule Backoffice.FormComponent do
 
     case resolver.save(opts, action, changeset) do
       {:ok, resource} ->
-        {:noreply,
-         socket
-         # TODO: Fix flash message
-         |> put_flash(:success, "#{action_msg} resource [##{resource.id}]!")
-         |> push_redirect(to: socket.assigns.return_to)}
+        socket =
+          socket
+          |> push_notification(
+            level: :success,
+            title: "Success!",
+            subtitle: "#{action_msg} resource [#{resource.id}]",
+            redirect: socket.assigns.return_to
+          )
+
+        {:noreply, socket}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        require Logger
-        Logger.warn("Failed to save, #{inspect(changeset)}")
+        socket =
+          socket
+          |> push_notification(
+            level: :error,
+            title: "Error",
+            subtitle: "Failed to save: `#{Backoffice.ErrorHelper.traverse_errors(changeset)}`"
+          )
 
         {:noreply, assign(socket, changeset: changeset)}
     end
