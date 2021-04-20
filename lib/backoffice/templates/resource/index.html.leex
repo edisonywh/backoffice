@@ -28,7 +28,7 @@
   </dl>
 </div>
 
-<%= live_component @socket, Backoffice.FilterComponent, id: :filter, params: @params %>
+<%= live_component @socket, Backoffice.FilterComponent, id: :filter, fields: @fields, params: @params %>
 
 <div class="mt-4 flex flex-col">
   <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

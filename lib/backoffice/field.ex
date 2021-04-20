@@ -229,12 +229,20 @@ defmodule Backoffice.Field do
     "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
   end
 
+  def default_style(:select) do
+    "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+  end
+
   def default_style(:map) do
     default_style(:textarea)
   end
 
+  def default_style(:datetime) do
+    "flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-r-md sm:text-sm border-gray-300"
+  end
+
   def default_style(:boolean) do
-    "focus:ring-indigo-500 h-4 w-4 mt-2 mb-4 text-indigo-600 border-gray-300 rounded transition"
+    "focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded transition"
   end
 
   def default_style(:integer) do
