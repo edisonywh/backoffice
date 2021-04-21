@@ -1,4 +1,19 @@
 defmodule Backoffice.Resources do
+  def filterable_params(params, fields) do
+    filterable =
+      fields
+      |> Enum.filter(fn {_k, v} ->
+        Map.get(v, :filterable, true)
+      end)
+
+    allowed_opts =
+      Enum.map([:page, :page_size, :order_by] ++ Keyword.keys(filterable), fn k ->
+        to_string(k)
+      end)
+
+    Map.take(params, allowed_opts)
+  end
+
   def resolve_schema(%{__struct__: Ecto.Query, from: {_source, schema}})
       when is_atom(schema) and not is_nil(schema),
       do: schema

@@ -34,13 +34,13 @@ defmodule Backoffice.Resolvers.Ecto do
     repo.insert(changeset)
   end
 
-  def load(resource, resolver_opts, page_opts) do
+  def load(resource, resolver_opts, params) do
     repo = Keyword.fetch!(resolver_opts, :repo)
     preloads = Keyword.get(resolver_opts, :preload, [])
 
     paginate_opts = %{
-      page_size: parse(Map.get(page_opts, "page_size", 20)),
-      page_number: parse(Map.get(page_opts, "page", 1))
+      page_size: parse(Map.get(params, "page_size", 20)),
+      page_number: parse(Map.get(params, "page", 1))
     }
 
     resource
@@ -48,21 +48,21 @@ defmodule Backoffice.Resolvers.Ecto do
     |> paginate(repo, paginate_opts)
   end
 
-  def search(_mod, resource, resolver_opts, page_opts) do
-    page_opts
+  def search(_mod, resource, resolver_opts, params) do
+    params
     |> Enum.map(&Backoffice.Filter.preprocess/1)
     |> List.flatten()
     |> Enum.reduce(resource, fn {_, field, _} = filter, acc ->
       apply_filter(acc, filter, resource.__schema__(:type, field))
     end)
-    |> load(resolver_opts, page_opts)
+    |> load(resolver_opts, params)
   end
 
-  def get(resource, resolver_opts, page_opts) do
+  def get(resource, resolver_opts, params) do
     repo = Keyword.fetch!(resolver_opts, :repo)
     preloads = Keyword.get(resolver_opts, :preload, [])
 
-    case Map.get(page_opts, "id") do
+    case Map.get(params, "id") do
       # If there's no ID, we assume it's a `:new` action.
       nil ->
         resource
@@ -151,6 +151,11 @@ defmodule Backoffice.Resolvers.Ecto do
 
   defp apply_filter(query, {:and, field, {:contains, value}}, type)
        when type in [:id, :integer, :boolean] do
+    query
+    |> where([q], field(q, ^field) == ^value)
+  end
+
+  defp apply_filter(query, {:and, field, {:contains, value}}, {_, Ecto.Enum, _}) do
     query
     |> where([q], field(q, ^field) == ^value)
   end

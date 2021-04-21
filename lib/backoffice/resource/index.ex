@@ -23,9 +23,14 @@ defmodule Backoffice.Resource.Index do
         fields = schema.__schema__(:fields)
         types = Enum.map(fields, &schema.__schema__(:type, &1))
 
-        for {field, type} <- Enum.zip(fields, types), not is_tuple(type) do
-          field(field, type)
-        end
+        Enum.zip(fields, types)
+        |> Enum.reduce([], fn
+          {field, {:parameterized, Ecto.Enum, values}}, acc ->
+            [field(field, Ecto.Enum, Enum.into(values, [])) | acc]
+
+          {field, type}, acc ->
+            [field(field, type) | acc]
+        end)
       end
 
       actions do
@@ -161,28 +166,6 @@ defmodule Backoffice.Resource.Index do
         {:noreply, assign(socket, :selected_ids, selected_ids)}
       end
 
-      def handle_info({:apply_filter, filter, value}, socket) do
-        params =
-          socket.assigns.params
-          |> Map.put(filter, value)
-
-        {:noreply,
-         push_patch(socket,
-           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
-         )}
-      end
-
-      def handle_info({:remove_filter, filter}, socket) do
-        params =
-          socket.assigns.params
-          |> Map.delete(filter)
-
-        {:noreply,
-         push_patch(socket,
-           to: Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
-         )}
-      end
-
       def default_create(socket, id) do
         {:noreply,
          push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :new, %{}))}
@@ -193,7 +176,9 @@ defmodule Backoffice.Resource.Index do
          push_redirect(socket, to: Backoffice.Resources.get_path(__MODULE__, socket, :edit, id))}
       end
 
-      defp apply_action(socket, _, page_opts) do
+      defp apply_action(socket, _, params) do
+        params = Backoffice.Resources.filterable_params(params, __index__())
+
         socket
         |> assign(
           :page_title,
@@ -201,7 +186,7 @@ defmodule Backoffice.Resource.Index do
         )
         |> assign(
           :return_to,
-          Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(page_opts, []))
+          Backoffice.Resources.get_path(__MODULE__, socket, :index, Enum.into(params, []))
         )
         |> assign(
           :resources,
@@ -209,7 +194,7 @@ defmodule Backoffice.Resource.Index do
             __MODULE__,
             unquote(resource),
             unquote(resolver_opts),
-            page_opts
+            params
           )
         )
         |> assign(:widgets, __MODULE__.widgets(socket))
