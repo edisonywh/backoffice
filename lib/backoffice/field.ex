@@ -42,7 +42,7 @@ defmodule Backoffice.Field do
         :textarea,
         Map.merge(opts, %{
           rows: 4,
-          value: Phoenix.json_library().encode!(input_value(form, field), pretty: true)
+          value: input_value(form, field)
         })
       )
 
@@ -79,7 +79,16 @@ defmodule Backoffice.Field do
   end
 
   defp do_form_field(form, field, :map, opts) do
-    do_form_field(form, field, :textarea, opts)
+    opts =
+      build_opts(
+        :map,
+        Map.merge(opts, %{
+          rows: 4,
+          value: Phoenix.json_library().encode!(input_value(form, field), pretty: true)
+        })
+      )
+
+    textarea(form, field, opts)
   end
 
   defp do_form_field(form, field, :boolean, opts) do
@@ -215,6 +224,10 @@ defmodule Backoffice.Field do
 
   def default_style(:label) do
     "block text-sm font-medium leading-5 text-gray-700"
+  end
+
+  def default_style(:map) do
+    default_style(:textarea)
   end
 
   def default_style(:textarea) do
