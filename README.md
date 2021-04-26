@@ -145,16 +145,9 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
     resolver: Backoffice.Resolvers.Ecto,
     resolver_opts: [
       repo: YourApp.Repo,
-      # Use preload and default_order_by
+      # Use preload and order_by
       preload: [:mailbox, :notification_preference],
-      default_order_by: :id
-      # OR 
-      # Use query which will override preload and default_order_by
-      # query: fn resource -> 
-      #    resource
-      #    |> preload([q], [:abc])
-      #    |> order_by([q], [desc: :abc])
-      #  end
+      order_by: :id
     ],
     resource: YourApp.Accounts.User
 

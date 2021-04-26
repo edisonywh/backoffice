@@ -38,12 +38,12 @@ defmodule Backoffice.Resolvers.Ecto do
     repo = Keyword.fetch!(resolver_opts, :repo)
 
     preloads = Keyword.get(resolver_opts, :preload, [])
-    default_order_by = Keyword.get(resolver_opts, :default_order_by, [])
+    order_by = Keyword.get(resolver_opts, :order_by, [])
 
     customize_query =
       Keyword.get(resolver_opts, :query, fn q ->
         q
-        |> order_by([q], ^default_order_by)
+        |> order_by([q], ^order_by)
         |> preload([q], ^preloads)
       end)
 
