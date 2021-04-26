@@ -40,20 +40,14 @@ defmodule Backoffice.Resolvers.Ecto do
     preloads = Keyword.get(resolver_opts, :preload, [])
     order_by = Keyword.get(resolver_opts, :order_by, [])
 
-    customize_query =
-      Keyword.get(resolver_opts, :query, fn q ->
-        q
-        |> order_by([q], ^order_by)
-        |> preload([q], ^preloads)
-      end)
-
     paginate_opts = %{
       page_size: parse(Map.get(params, "page_size", 20)),
       page_number: parse(Map.get(params, "page", 1))
     }
 
     resource
-    |> customize_query.()
+    |> order_by([q], ^order_by)
+    |> preload([q], ^preloads)
     |> paginate(repo, paginate_opts)
   end
 
