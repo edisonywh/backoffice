@@ -36,7 +36,9 @@ defmodule Backoffice.Resolvers.Ecto do
 
   def load(resource, resolver_opts, params) do
     repo = Keyword.fetch!(resolver_opts, :repo)
+
     preloads = Keyword.get(resolver_opts, :preload, [])
+    order_by = Keyword.get(resolver_opts, :order_by, [])
 
     paginate_opts = %{
       page_size: parse(Map.get(params, "page_size", 20)),
@@ -44,6 +46,7 @@ defmodule Backoffice.Resolvers.Ecto do
     }
 
     resource
+    |> order_by([q], ^order_by)
     |> preload([q], ^preloads)
     |> paginate(repo, paginate_opts)
   end

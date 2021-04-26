@@ -145,7 +145,9 @@ defmodule YourAppWeb.Backoffice.UserLive.Index do
     resolver: Backoffice.Resolvers.Ecto,
     resolver_opts: [
       repo: YourApp.Repo,
-      preload: [:mailbox, :notification_preference]
+      # Use preload and order_by
+      preload: [:mailbox, :notification_preference],
+      order_by: :id
     ],
     resource: YourApp.Accounts.User
 

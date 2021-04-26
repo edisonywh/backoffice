@@ -99,7 +99,7 @@ defmodule Backoffice.Field do
     component = Map.fetch!(opts, :render)
     opts = Map.merge(opts, %{value: input_value(form, field)})
 
-    live_component(_, component, opts)
+    live_component(form, component, opts)
   end
 
   defp do_form_field(form, field, :custom, opts) do
