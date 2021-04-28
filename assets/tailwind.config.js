@@ -2,6 +2,7 @@ const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
   purge: {
+    enabled: true,
     content: [
       '../lib/backoffice/components/*.ex',
       '../lib/backoffice/widgets/*.ex',
@@ -13,6 +14,7 @@ module.exports = {
       '../lib/backoffice/live/*.leex',
       '../lib/backoffice/templates/resource/*.leex'
     ],
+    layers: ['components', 'utilities'],
     options: {
       safelist: ['ml-0', 'ml-2', 'ml-4', 'ml-6', 'ml-8'],
     }
