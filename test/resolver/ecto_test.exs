@@ -25,7 +25,6 @@ defmodule Backoffice.Resolver.EctoTest do
       RepoMock
       |> expect(:one, fn query -> 0 end)
       |> expect(:all, fn query ->
-        IO.inspect(query.preloads)
         assert has_preloads(query, [:schema1])
         assert has_order_bys(query, [:title])
 
