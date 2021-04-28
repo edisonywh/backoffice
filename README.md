@@ -202,7 +202,17 @@ defmodule YourAppWeb.Backoffice.UserLive.Single do
 end
 ```
 
-4. Set-up your resource module in the route.
+4. Provide the following plug in your endpoint.ex
+
+```elixir
+plug Plug.Static,
+    at: "/backoffice",
+    from: :backoffice,
+    gzip: false,
+    only: ~w(css js)
+```
+
+5. Set-up your resource module in the route.
 
 ```elixir
 scope "/admin", YourAppWeb, do
@@ -211,7 +221,7 @@ scope "/admin", YourAppWeb, do
 end
 ```
 
-5. You are done!
+6. You are done!
 
 ## Resolvers?
 
