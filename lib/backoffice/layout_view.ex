@@ -93,6 +93,15 @@ defmodule Backoffice.LayoutView do
     end
   end
 
+  def static_path do
+    layout = Application.get_env(:backoffice, :layout)
+
+    case layout && function_exported?(layout, :static_path, 0) do
+      true -> layout.static_path()
+      _ -> "/backoffice"
+    end
+  end
+
   def logo do
     layout = Application.get_env(:backoffice, :layout)
 

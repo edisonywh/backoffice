@@ -5,4 +5,5 @@ defmodule Backoffice.Layout do
   @callback logo() :: String.t()
   @callback stylesheets() :: [String.t()]
   @callback scripts() :: [String.t()]
+  @callback static_path() :: String.t()
 end
