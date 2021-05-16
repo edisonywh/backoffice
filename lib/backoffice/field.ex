@@ -153,7 +153,7 @@ defmodule Backoffice.Field do
         text_input(
           form,
           field,
-          build_opts(:default, value: resource[key], disabled: true)
+          build_opts(:default, value: Map.get(resource, key), disabled: true)
         )
     end
   end
