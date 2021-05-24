@@ -202,7 +202,41 @@ defmodule YourAppWeb.Backoffice.UserLive.Single do
 end
 ```
 
-4. Set-up your resource module in the route.
+4. Provide the following plug in your endpoint.ex
+
+```elixir
+plug Plug.Static,
+    at: "/backoffice",
+    from: :backoffice,
+    gzip: false,
+    only: ~w(css js)
+```
+
+If `/backoffice` conflicts with one of your existing routes, you can customize the static_path in `YourAppWeb.Backoffice.Layout`
+
+```elixir
+# lib/your_app_web/live/backoffice/layout.ex
+  
+  # Add this. Defaults to "/backoffice" if not overriden
+  def static_path(), do: "/whatever_you_want"  
+
+  # ...  the stylesheets, scripts, logo and links function
+end 
+
+# lib/your_app_web/endpoint.ex
+defmodule MyAppWeb.Endpoint do
+
+    # Add this instead
+    plug Plug.Static,
+      at: YourAppWeb.Backoffice.Layout.static_path(),
+      from: :backoffice,
+      gzip: false,
+      only: ~w(css js)
+
+   # ... other plugs
+end 
+
+5. Set-up your resource module in the router.
 
 ```elixir
 scope "/admin", YourAppWeb, do
@@ -211,7 +245,7 @@ scope "/admin", YourAppWeb, do
 end
 ```
 
-5. You are done!
+6. You are done!
 
 ## Resolvers?
 
