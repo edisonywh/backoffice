@@ -234,7 +234,8 @@ defmodule MyAppWeb.Endpoint do
       only: ~w(css js)
 
    # ... other plugs
-end 
+end
+```
 
 5. Set-up your resource module in the router.
 
