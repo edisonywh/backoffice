@@ -67,11 +67,11 @@ defmodule Backoffice.DSL do
     Module.put_attribute(mod, :actions, {name, Macro.escape(opts)})
   end
 
-  defmacro form(action \\ nil, do: block) do
-    form(__CALLER__, action, block)
+  defmacro bo_form(action \\ nil, do: block) do
+    bo_form(__CALLER__, action, block)
   end
 
-  def form(_caller, action, block) do
+  def bo_form(_caller, action, block) do
     prelude =
       quote do
         import Backoffice.DSL
